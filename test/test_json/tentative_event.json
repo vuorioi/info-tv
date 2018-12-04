@@ -1,0 +1,18 @@
+{
+	"kind": "calendar#events",
+	"items": [
+		{
+			"kind": "calendar#event",
+			"status": "tentative",
+			"summary": "Event 2",
+			"description": "Later event",
+			"location": "Location B",
+			"start": {
+				"date": "2018-01-02"
+			},
+			"end": {
+				"date": "2018-01-04"
+			}
+		}
+	]
+}

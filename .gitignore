@@ -1,0 +1,3 @@
+/build/*
+/debug/*
+/src/git_commit_rev.h

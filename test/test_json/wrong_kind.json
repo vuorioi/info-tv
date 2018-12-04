@@ -1,0 +1,31 @@
+{
+	"kind": "unkown",
+	"items": [
+		{
+			"kind": "calendar#event",
+			"status": "confirmed",
+			"summary": "Event 1",
+			"description": "First event",
+			"location": "Location A",
+			"start": {
+				"dateTime": "2018-01-01T16:30:00+03:00"
+			},
+			"end": {
+				"dateTime": "2018-01-02T04:15:20+03:00"
+			}
+		},
+		{
+			"kind": "calendar#event",
+			"status": "confirmed",
+			"summary": "Event 2",
+			"description": "Later event",
+			"location": "Location B",
+			"start": {
+				"date": "2018-01-02"
+			},
+			"end": {
+				"date": "2018-01-04"
+			}
+		}
+	]
+}
