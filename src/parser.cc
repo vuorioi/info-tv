@@ -75,7 +75,6 @@ events::parser::events_from_json(const std::string& json_str)
 
 		for (auto event : events) {
 			std::string name;
-			std::string description;
 			std::string location;
 			ptime start;
 			ptime end;
@@ -97,10 +96,6 @@ events::parser::events_from_json(const std::string& json_str)
 					throw std::runtime_error{"can't find key \"summary\" from event"};
 				else
 					name = *iter;
-
-				iter = event.find("description");
-				if (iter != event.end())
-					description = *iter;
 
 				iter = event.find("location");
 				if (iter != event.end())
@@ -152,9 +147,6 @@ events::parser::events_from_json(const std::string& json_str)
 				}
 
 				event_list.emplace_back(events::event{converter.from_bytes(name.c_str()), start, end});
-
-				if (not description.empty())
-					event_list.back().set_description(converter.from_bytes(description.c_str()));
 
 				if (not location.empty())
 					event_list.back().set_location(converter.from_bytes(location.c_str()));

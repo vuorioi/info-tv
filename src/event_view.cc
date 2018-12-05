@@ -28,15 +28,12 @@ events::event_view::draw(ui::win& win) const
 	for (auto event : model_->events()) {
 		const unsigned location_space = event.location()
 						     .empty() ? 0 : 1;
-		const unsigned description_space = event.description()
-							.empty() ? 0 : 1;
 		const unsigned event_space = 4 +
-					     location_space + 
-					     description_space;
+					     location_space;
 
-		// Create a window in the parent windows curren position and
-		// render all of the necessary stuff in it. If the name or the
-		// description is too long they are shortened
+		// Create a window in the parent windows current position and
+		// render all of the necessary stuff in it. If the name is too
+		// long it's shortened
 		ui::win event_win{&win,
 				  {win.curx(), win.cury()},
 				  {win.curx() + win.max_width(),
@@ -124,23 +121,6 @@ events::event_view::draw(ui::win& win) const
 				   ui::effect::normal,
 				   ui::align::append)
 			 .newline();
-
-		if (not event.description().empty()) {
-			std::wstringstream description_ss;
-
-			description_ss << '"';
-
-			if (event.description().length() > event_win.max_width() - 2)
-				description_ss << event.description()
-						       .substr(0, event_win.max_width() - 5)
-					       << "...";
-			else
-				description_ss << event.description();
-			
-			description_ss << '"';
-			event_win.add_text(description_ss.str(),
-					   ui::effect::highlight);
-		}
 
 		event_win.draw();
 		
