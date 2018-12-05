@@ -7,6 +7,7 @@
 #include <nlohmann/json.hpp>
 
 #include "event.h"
+#include "icalendar.h"
 
 /* parse_datetime - parse date and time from the json provided by the Google
  * API
@@ -44,6 +45,38 @@ events::parser::credentials_from_args(const int count, char** vector)
 	}
 
 	return std::pair{id, key};
+}
+
+std::list<events::event>
+events_from_ics(const std::string& ics_str)
+{
+	using boost::posix_time::from_iso_string;
+
+	std::list<events::event> event_list;
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+
+	icalendar::node root = icalendar::parse(ics_str);
+
+	if (root["VERSION"] != "2.0")
+		throw std::runtime_error{"root node has wrong icalendar version"};
+
+	if (root["PRODID"] != "TUT.FI//POP-CALENDARSERVICE_V1.0//FI")
+		throw std::runtime_error{"wrong product id"};
+
+	for (auto e : root.subnode("VEVENT")) {
+		if (e["STATUS"] != "CONFIRMED")
+			continue;
+
+		event_list.emplace_back(events::event{converter.from_bytes(e["SUMMARY"].c_str()),
+					from_iso_string(e["DTSTART;TZID=Europe/Helsinki"]),
+					from_iso_string(e["DTEND;TZID=Europe/Helsinki"])});
+		const std::string location = e["LOCATION"];
+
+		if (not location.empty())
+			event_list.back().set_location(converter.from_bytes(location.c_str()));
+	}
+
+	return event_list;
 }
 
 std::list<events::event>
