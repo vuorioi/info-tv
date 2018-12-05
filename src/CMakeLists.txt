@@ -11,6 +11,9 @@ add_library(Ui
 target_link_libraries(Ui
 	ncursesw)
 
+add_library(iCalendar
+	icalendar.cc)
+
 add_library(Event
 	db_connection.cc
 	event.cc
@@ -21,6 +24,7 @@ target_link_libraries(Event
 	curl
 	nlohmann_json::nlohmann_json
 	Ui
+	iCalendar
 	${Boost_DATE_TIME_LIBRARY})
 
 add_library(Status
