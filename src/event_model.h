@@ -51,6 +51,7 @@ protected:
 	time_duration cooldown_;
 	db_connection db_;
 	std::list<event> events_;
+	time_duration pop_cooldown_;
 	std::string id_;
 	std::string key_;
 	ptime last_update_;
