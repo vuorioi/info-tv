@@ -30,12 +30,6 @@ public:
 	/* ~event - explicitly defaulted dtor */
 	virtual ~event() = default;
 
-	/* set_description - set the event description
-	 * @description: description string
-	 *
-	 * Sets the  description of this event to supplied string
-	 */
-	virtual void set_description(const std::wstring& description);
 	/* set_duration - set the event duration
 	 * @start: boost::posix_time::ptime representation of the start time
 	 * @end: boost::posix_time::ptime representation of the end time
@@ -57,11 +51,6 @@ public:
 	 */
 	virtual void set_name(const std::wstring& name);
 
-	/* description - get the event description
-	 *
-	 * Returns a string view of the event description
-	 */
-	virtual std::wstring_view description() const;
 	/* duration -  get the event duration
 	 *
 	 * Returns a boost::posix_time::time_period object representing the span
@@ -80,7 +69,6 @@ public:
 	virtual std::wstring_view name() const;
 
 protected:
-	std::wstring description_;
 	time_period duration_;
 	std::wstring location_;
 	std::wstring name_;
