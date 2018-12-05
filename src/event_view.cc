@@ -28,11 +28,8 @@ events::event_view::draw(ui::win& win) const
 	for (auto event : model_->events()) {
 		const unsigned location_space = event.location()
 						     .empty() ? 0 : 1;
-		//const unsigned description_space = event.description()
-							//.empty() ? 0 : 1;
 		const unsigned event_space = 4 +
-					     location_space; //+ 
-					     //description_space;
+					     location_space;
 
 		// Create a window in the parent windows current position and
 		// render all of the necessary stuff in it. If the name is too
