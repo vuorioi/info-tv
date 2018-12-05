@@ -9,7 +9,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 add_library(Ui
 	ui.cc)
 target_link_libraries(Ui
-	ncurses)
+	ncursesw)
 
 add_library(Event
 	db_connection.cc
