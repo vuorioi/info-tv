@@ -154,6 +154,12 @@ public:
 				     const unsigned type = normal,
 				     const unsigned pos = append);
 
+	/* draw - draw this window
+	 *
+	 * This function should be called when all of the contents is added
+	 * to render the window
+	 */
+	virtual void draw() const;
 	/* get_win - get the underlaying ncurses window
 	 *
 	 * Returns a pointer to the underlaying ncurses window structure
@@ -173,15 +179,14 @@ public:
 	virtual unsigned cury() const;
 	/* max_width - get the maximum width of item
 	 *
-	 * Returns  the maximum width of an item inside this window
+	 * Returns the maximum width of an item inside this window
 	 */
 	virtual unsigned max_width() const;
-	/* draw - draw this window
-	 *
-	 * This function should be called when all of the contents is added
-	 * to render the window
+	/* remaining_height - get the remaining vertical space
+	 * 
+	 * Returns the remaining vertical space in this window
 	 */
-	virtual void draw() const;
+	virtual unsigned remaining_height() const;
 
 private:
 	static constexpr unsigned x_padding = 2;

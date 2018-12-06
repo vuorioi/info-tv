@@ -207,6 +207,15 @@ ui::win::add_ascii_image(const ascii_image& img,
 	return *this;
 }
 
+void 
+ui::win::draw() const
+{
+	if (parent_)
+		touchwin(parent_->get_win());
+
+	wrefresh(win_);
+}
+
 WINDOW*
 ui::win::get_win() const
 {
@@ -231,11 +240,8 @@ ui::win::max_width() const
 	return width_ - 2*x_padding;
 }
 
-void 
-ui::win::draw() const
+unsigned
+ui::win::remaining_height() const
 {
-	if (parent_)
-		touchwin(parent_->get_win());
-
-	wrefresh(win_);
+	return height_ - 2*y_padding - y_;
 }
