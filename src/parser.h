@@ -7,17 +7,6 @@
 #include "event.h"
 
 namespace events::parser {
-	/* credentials_from_args - parse calendar id and key
-	 * @count: number of string in vector
-	 * @vector: pointer to a string vector
-	 *
-	 * Returns a pair containing the calendar id and api key
-	 *
-	 * This function parses calendar id (--calendar-id) and api key 
-	 * (--api_key) from commandline arguments
-	 */
-	std::pair<std::string, std::string> credentials_from_args(const int count,
-								  char** vector);
 	/* events_from_ics - parse events from ics data
 	 * @ics_str: a string containing the icalendar data
 	 *

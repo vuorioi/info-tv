@@ -27,26 +27,6 @@ static ptime parse_datetime(const std::string& src)
 	}
 }
 
-std::pair<std::string, std::string>
-events::parser::credentials_from_args(const int count, char** vector)
-{
-	std::string key;
-	std::string id;
-
-	for (unsigned i = 0; i < count; i++) {
-		const char* arg = vector[i];
-
-		if (std::strcmp(arg, "--calendar_id") == 0)
-			id = vector[++i];
-		else if (std::strcmp(arg, "--api_key") == 0)
-			key = vector[++i];
-		else
-			continue;
-	}
-
-	return std::pair{id, key};
-}
-
 std::list<events::event>
 events::parser::events_from_ics(const std::string& ics_str)
 {
