@@ -48,7 +48,7 @@ events::parser::credentials_from_args(const int count, char** vector)
 }
 
 std::list<events::event>
-events_from_ics(const std::string& ics_str)
+events::parser::events_from_ics(const std::string& ics_str)
 {
 	using boost::posix_time::from_iso_string;
 
