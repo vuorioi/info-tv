@@ -6,6 +6,9 @@ find_package(Boost REQUIRED COMPONENTS date_time)
 
 include_directories(${Boost_INCLUDE_DIRS})
 
+add_library(Utility
+	utility.cc)
+
 add_library(Ui
 	ui.cc)
 target_link_libraries(Ui
@@ -38,4 +41,5 @@ add_executable(info-tv main.cc)
 target_link_libraries(info-tv
 	Event
 	Status
-	Ui)
+	Ui
+	Utility)
