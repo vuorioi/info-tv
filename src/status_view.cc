@@ -36,8 +36,9 @@ util::status_view::set_system_message(const std::wstring& msg)
 void
 util::status_view::draw(ui::win& win) const
 {
-	const unsigned height = (logo_ ? logo_->height + 4 : 4) + 
-				(system_msg_.empty() ? 0 : 2);
+	const unsigned logo_height = logo_ ? logo_->height : 0;
+	const unsigned msg_height = system_msg_.empty() ? 0 : 3;
+	const unsigned height = 3 + logo_height + msg_height;
 
 	ui::win status_win{&win,
 			   {win.curx(), win.cury()},
