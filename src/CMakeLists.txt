@@ -19,7 +19,9 @@ add_library(Event
 	event.cc
 	event_model.cc
 	event_view.cc
-	parser.cc)
+	google_calendar_backend.cc
+	parser.cc
+	pop_calendar_backend.cc)
 target_link_libraries(Event
 	curl
 	nlohmann_json::nlohmann_json
