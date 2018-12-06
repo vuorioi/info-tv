@@ -14,7 +14,7 @@ static bool add_events(std::list<events::event>& dst,
 		       const std::list<events::event>& src);
 
 void
-events::event_model::add_source(event_backend_interface* source)
+events::event_model::add_source(std::shared_ptr<event_backend_interface> source)
 {
 	event_sources_.push_back(source);
 }
@@ -131,7 +131,7 @@ add_events(std::list<events::event>& dst, const std::list<events::event>& src)
 		// event or that is (probably) the same event
 		event_comparison cmp(new_event);
 
-		auto it = find_if(dst.begin(), dst.end(), cmp);
+		auto it = find_if(dst.begin(), dst.end(), std::ref(cmp));
 
 		// If the event was equal to an existing event we can skip it
 		// otherwise it is added before the first event that starts afte
@@ -140,7 +140,7 @@ add_events(std::list<events::event>& dst, const std::list<events::event>& src)
 		if (cmp.was_equal()) {
 			continue;
 		} else {
-			dst.insert(it, new_event);
+			dst.insert(it, std::move(new_event));
 			new_events = true;
 		}
 	}
