@@ -18,11 +18,8 @@ namespace util {
  */
 class status_view : public view_interface {
 public:
-	/* status_view - ctor
-	 *
-	 * This function attempts to load the logo
-	 */
-	status_view();
+	/* explicitly defaulted ctor */
+	status_view() = default;
 	
 	/* ~status_view - dtor
 	 *
@@ -30,6 +27,12 @@ public:
 	 */
 	virtual ~status_view();
 
+	/* set_logo - set system logo
+	 * @path: path to the logo file
+	 *
+	 * This function sets the logo displayed at the top of the screen
+	 */
+	virtual void set_logo(const std::string& path);
 	/* set_system_time - set the displayed time
 	 * @time: boost::posix_time::ptime representation of time
 	 *
