@@ -2,137 +2,148 @@
 
 #include <algorithm>
 #include <iterator>
+#include <optional>
 #include <sstream>
 
-#include "parser.h"
+#include <boost/date_time.hpp>
 
-events::event_model::event_model(const std::string& calendar_id,
-				 const std::string& api_key,
-				 const long cooldown_seconds) :
-	cooldown_{0, 0, cooldown_seconds, 0},
-	id_{calendar_id},
-	key_{api_key}
+using boost::posix_time::second_clock;
+//using boost::gregorian;
 
+static bool add_events(std::list<events::event>& dst,
+		       const std::list<events::event>& src);
+
+void
+events::event_model::add_source(event_backend_interface* source)
 {
-	last_update_ = second_clock::universal_time() - cooldown_;
+	event_sources_.push_back(source);
 }
 
 bool
 events::event_model::update()
 {
-	bool updated;
+	bool new_events = false;
 
-	auto now = second_clock::universal_time();
+	for (auto source : event_sources_) {
+		// If source cooldown has expired update events
+		// and on success add events to model's event list.
+		// on a failure the sources cooldown is lowered to
+		// schedule a retry sooner
+		if (source->ready()) {
+			auto result = source->update();
 
-	if (cooldown_ <= now - last_update_) {
-		// Get events from both POP and Google Calendars
-		constexpr char pop_request[] = "https://www.tut.fi/calendarservice/calendarfeed/events/132672/fi/3b87d99c55d40a89fa472daad50d65567670d6c4.ics";
-
-
-		// Format the Google API request using UTC time to make things easier
-		auto today = now.date();
-		auto time = now.time_of_day();
-
-		std::stringstream google_request_ss;
-		google_request_ss << "https://www.googleapis.com/calendar/v3/calendars/"
-				  << id_
-				  << "/events?"
-				  << "timeMin="
-				  << today.year()
-				  << '-'
-				  << std::setw(2)
-				  << std::setfill('0')
-				  << int(today.month())
-				  << '-'
-				  << std::setw(2)
-				  << std::setfill('0')
-				  << today.day()
-				  << 'T'
-				  << std::setw(2)
-				  << std::setfill('0')
-				  << time.hours()
-				  << ':'
-				  << std::setw(2)
-				  << std::setfill('0')
-				  << time.minutes()
-				  << ':'
-				  << std::setw(2)
-				  << std::setfill('0')
-				  << time.seconds()
-				  << 'Z'
-				  << "&orderBy=startTime"
-				  << "&singleEvents=true"
-				  << "&key="
-				  << key_;
-
-		// Get responses from both calendars
-		std::string pop_response;
-		std::string google_response;
-
-		db_.set_request(pop_request);
-		bool pop_updated = true;
-
-		try {
-			pop_response = db_.get_response();
-		} catch (...) {
-			pop_updated = false;
+			if (result.has_value())
+				(add_events(events_, result.value()) or
+				 new_events) ? new_events = true :
+					       new_events = false;
+			else
+				source->lower_cooldown();
 		}
-
-
-		db_.set_request(google_request_ss.str());
-		bool google_updated = true;
-
-		try {
-			google_response = db_.get_response();
-		} catch (...) {
-			google_updated = false;
-		}
-
-		last_update_ = second_clock::universal_time();
-
-		std::list<event> pop_events;
-
-		if (pop_updated) {
-			try {
-				pop_events = parser::events_from_ics(pop_response);
-			} catch (const std::runtime_error& e) {
-				pop_updated = false;
-			}
-		} else {
-			//TODO change cooldown
-		}
-
-		last_update_ = second_clock::universal_time();
-
-		if (google_updated) {
-			try {
-				events_ = parser::events_from_json(response);
-			} catch (const std::runtime_error& e) {
-				google_updated = false;
-			}
-		} else {
-			//TODO change cooldown
-		}
-	} 
-
-	if (updated) {
-		//TODO remove old pop events
-
-		//TODO combine pop and google events
-
-		//TODO 
-	} else {
-		// Remove events that have already ended
-		events_.remove_if([](const events::event& e) {
-			return e.duration().end() < second_clock::local_time();
-		});
 	}
+	
+	// Remove events that have already ended
+	events_.remove_if([](const events::event& e) {
+		return e.duration().end() < second_clock::local_time();
+	});
 
-	return true;
+	return new_events;
 }
 
 std::list<events::event>
 events::event_model::events() const
 {
 	return events_;
+}
+
+/* event_comparison structure
+ * This structure represents a comparison between one to multiple events.
+ * It can be used to see if the lhs event, stored inside the struct, is equal
+ * to any other event or if any other event start after the lhs event.
+ */
+struct event_comparison {
+	/* event_comparison - ctor */
+	event_comparison(const events::event& lhs) :
+		lhs_{lhs},
+		is_same_{false}
+	{};
+
+	/* was_equal - check if the compared rhs event was equal to lsh event
+	 *
+	 * Returns true if the last compared rhs event was (probably) the same
+	 * event as the lhs event.
+	 */
+	bool
+	was_equal() const
+	{
+		return is_same_;
+	}
+	/* operator() - compares the lhs and rhs events
+	 * @rhs: the event to compare to the lhs event
+	 *
+	 * Returns true if the events are (probably) the same or
+	 * if the rhs event starts after the lhs event.
+	 *
+	 * Events are considered to be the same if their names are close to
+	 * each other and if they have the same duration and if their locations
+	 * are close to each other.
+	 */
+	bool
+	operator()(const events::event& rhs)
+	{
+		if (are_close(lhs_.name(), rhs.name()) and
+		    lhs_.duration() == rhs.duration() and
+		    are_close(lhs_.location(), rhs.location())) {
+			is_same_ = true;
+			return true;
+		} else {
+			is_same_ = false;
+			return (lhs_.duration().begin() <
+				rhs.duration().begin());
+		}
+	}
+
+private:
+	/* are_close - check if strings are "close" to each other
+	 * @lhs: first wide string to compare
+	 * @rhs: second wide string to compare
+	 *
+	 * Returns true if either one of the string is a substring of the
+	 * other.
+	 */
+	static bool
+	are_close(const std::wstring_view& lhs, const std::wstring_view& rhs)
+	{
+		return (lhs.find(rhs) != std::string::npos or
+			rhs.find(lhs) != std::string::npos);
+	}
+
+	const events::event& lhs_;
+	bool is_same_;
+};
+
+static bool
+add_events(std::list<events::event>& dst, const std::list<events::event>& src)
+{
+	bool new_events = false;
+
+	for (auto new_event : src) {
+		// Find the first existing event that starts after the new
+		// event or that is (probably) the same event
+		event_comparison cmp(new_event);
+
+		auto it = find_if(dst.begin(), dst.end(), cmp);
+
+		// If the event was equal to an existing event we can skip it
+		// otherwise it is added before the first event that starts afte
+		// it. If no existing event start after this event then it is
+		// inserted to the end of the list
+		if (cmp.was_equal()) {
+			continue;
+		} else {
+			dst.insert(it, new_event);
+			new_events = true;
+		}
+	}
+
+	return new_events;
 }
