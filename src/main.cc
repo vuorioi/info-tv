@@ -4,24 +4,29 @@
 #include <list>
 #include <thread>
 #include <tuple>
+#include <memory>
+#include <utility>
+#include <vector>
 
+#include "event_backend_interface.h"
 #include "event_model.h"
 #include "event_view.h"
+#include "google_calendar_backend.h"
 #include "parser.h"
+#include "pop_calendar_backend.h"
 #include "status_view.h"
 #include "ui.h"
+#include "utility.h"
 #include "view_interface.h"
 
-constexpr char version[] = "1.0";
+constexpr char version[] = "1.1";
 
 static bool quit = false;
 
 static void refresh_system_message(util::status_view& view);
 static void set_system_message(util::status_view& view,
-			      const std::wstring& msg,
-			      std::chrono::seconds timeout);
-static bool parse_help(const int count, char** vector);
-static bool parse_version(const int count, char** vector);
+			       const std::wstring& msg,
+			       std::chrono::seconds timeout);
 static void print_help(const char* name);
 static void print_version();
 static void signal_handler(int signo);
@@ -36,35 +41,73 @@ int main(int argc, char** argv)
 {
 	using namespace std::chrono_literals;
 
-	if (parse_help(argc, argv)) {
-		print_help(argv[0]);
-		return 0;
-	}
-
-	if (parse_version(argc, argv)) {
-		print_version();
-		return 0;
-	}
-
-	std::string calendar_id;
-	std::string api_key;
-	std::tie(calendar_id, api_key) = events::parser::credentials_from_args(argc, argv);
-
+	// Create views and add them to the controllers list
 	std::list<view_interface*> views;
 	
 	util::status_view status;
 	views.push_back(&status);
 
 	events::event_view calendar_view;
-	events::event_model calendar_model{calendar_id, api_key, 600};
 	views.push_back(&calendar_view);
-	calendar_view.set_model(&calendar_model);
 
-	bool calendar = false;
-	if (calendar_id.empty() or api_key.empty())
-		set_system_message(status, L"No calendar id or key set!", 300s);
-	else
-		calendar = true;
+	// Create the event model and register the backends parsed from commandline to it
+	std::vector<std::pair<std::string, std::string>> params;
+
+	try {
+		params = util::parse_commandline(argc, argv);
+	} catch (const std::logic_error& e) {
+		std::cout << "Failed to parse arguments: "
+			  << e.what()
+			  << "\n\n";
+		print_help(argv[0]);
+		return -1;
+	}
+
+	events::event_model calendar_model;
+	std::list<std::shared_ptr<events::event_backend_interface>> backends;
+
+	for (auto param : params) {
+		if (param.first == "help") {
+			print_help(argv[0]);
+			return 0;
+		} else if (param.first == "version") {
+			print_version();
+			return 0;
+		}
+
+		if (param.first == "google-api") {
+			auto parsed = util::parse_value<4>(param.second);
+			auto backend = std::make_shared<events::google_calendar_backend>();
+
+			backend->set_id(parsed[0]);
+			backend->set_key(parsed[1]);
+			backend->set_cooldown(std::stoi(parsed[2]));
+			backend->set_error_cooldown(std::stoi(parsed[3]));
+
+			backends.emplace_back(std::make_shared<events::google_calendar_backend>());
+			calendar_model.add_source(backend);
+		} else if (param.first == "pop-api") {
+			auto parsed = util::parse_value<3>(param.second);
+			auto backend = std::make_shared<events::pop_calendar_backend>();
+
+			backend->set_url(parsed[0]);
+			backend->set_cooldown(std::stoi(parsed[1]));
+			backend->set_error_cooldown(std::stoi(parsed[2]));
+
+			backends.push_back(std::move(backend));
+			calendar_model.add_source(backends.back());
+		} else if (param.first == "logo") {
+			status.set_logo(param.second);
+		} else {
+			std::cout << "Unknown option '"
+				  << param.first
+				  << "'.\n\n";
+			print_help(argv[0]);
+			return -1;
+		}
+	}
+
+	calendar_view.set_model(&calendar_model);
 
 	// Setup curses and signal handler
 	ui::screen_init();
@@ -79,13 +122,9 @@ int main(int argc, char** argv)
 
 		ui::clear();
 
-		if (calendar) {
-			bool success = calendar_model.update();
-			if (not success)
-				set_system_message(status,
-						   L"Failed to get events from Google API!",
-						   120s);
-		}
+		bool new_events = calendar_model.update();
+		if (new_events)
+			set_system_message(status, L"New events!", 60s);
 
 		status.set_system_time(second_clock::local_time());
 		refresh_system_message(status);
@@ -129,41 +168,24 @@ static void set_system_message(util::status_view& view,
 	system_messages.set_time = std::chrono::steady_clock::now();
 }
 
-static bool parse_help(const int count, char** vector)
-{
-	for (unsigned i = 0; i < count; i++) {
-		const char* arg = vector[i];
-
-		if (std::strcmp(arg, "--help") == 0)
-			return true;
-	}
-
-	return false;
-}
-
-static bool parse_version(const int count, char** vector)
-{
-	for (unsigned i = 0; i < count; i++) {
-		const char* arg = vector[i];
-
-		if (std::strcmp(arg, "--version") == 0)
-			return true;
-	}
-
-	return false;
-}
-
 static void print_help(const char* name)
 {
 	std::cout << "Usage:\n"
-		  << "  " << name << " --help | --version\n"
-		  << "  " << name << " --calendar_id <id> --api_key <key> [options]\n\n"
+		  << "  " << name << " [ --help | --version ]\n"
+		  << "  " << name << " [options]\n\n"
 		  << "  <id> is the Google Calendar id and <key> is the API key that can be used\n"
 		  << "  to access the Calendar.\n\n"
 		  << "Options:\n"
-		  << "  --cooldown             Time delay between event refreshes in seconds.\n"
-		  << "                         Default value is 600 and the value has to be\n"
-		  << "                         greater than 60. Not yet implemented!\n";
+		  << "  --pop-api <url>,<cd>,<ecd>\n"
+		  << "                         Add a POP backend with the <url> pointing to the ics\n"
+		  << "                         resource. <cd> is the cooldown period in seconds and\n"
+		  << "                         <ecd> is the cooldown period used if the connection\n"
+		  << "                         to server failed.\n"
+		  << "  --google-api <id>,<key>,<cd>,<ecd>\n"
+		  << "                         Add a Google backend with the calendar id <id> and API\n"
+		  << "                         key <key>. <cd> is the cooldown period in seconds\n"
+		  << "                         and <ecd> is the cooldown period used if the connection\n"
+		  << "                         to server failed.\n";
 }
 
 static void print_version()
