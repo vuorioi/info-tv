@@ -34,6 +34,9 @@ events::event_view::draw(ui::win& win) const
 		if (win.remaining_height() < event_space)
 			break;
 
+		if (win.remaining_height() < event_space)
+			break;
+
 		// Create a window in the parent windows curren position and
 		// render all of the necessary stuff in it. If the name or the
 		// description is too long they are shortened
