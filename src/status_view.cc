@@ -6,19 +6,20 @@
 
 #include "git_commit_rev.h"
 
-util::status_view::status_view()
-{
-	std::ifstream stream{"logo.ascii"};
-	if (stream.is_open())
-		logo_ = new ui::ascii_image{stream};
-	else
-		logo_ = nullptr;
-}
-
 util::status_view::~status_view()
 {
 	if (logo_)
 		delete logo_;
+}
+
+void
+util::status_view::set_logo(const std::string& path)
+{
+	std::ifstream stream{path};
+	if (stream.is_open())
+		logo_ = new ui::ascii_image{stream};
+	else
+		logo_ = nullptr;
 }
 
 void
