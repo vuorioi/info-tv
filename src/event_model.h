@@ -3,13 +3,8 @@
 #include <list>
 #include <string>
 
-#include <boost/date_time.hpp>
-
-#include "db_connection.h"
 #include "event.h"
-
-using namespace boost::posix_time;
-using namespace boost::gregorian;
+#include "event_backend_interface.h"
 
 namespace events {
 /* event_model class
@@ -18,42 +13,36 @@ namespace events {
  */
 class event_model {
 public:
-	/* event_model - ctor
-	 * @calendar_id: id of the Google Calendar to be used
-	 * @api_key: API key that allows access to the calendar
-	 * @cooldown_seconds: number of seconds between updates via Google API
-	 */
-	event_model(const std::string& calendar_id,
-		    const std::string& api_key,
-		    const long cooldown_seconds);
+	/* event_model - explicitly defaulted ctor */
+	event_model() = default;
 	/* event_model - explicitly deleted copy ctor */
 	event_model(const event_model& rhs) = delete;
 	
 	/* ~event_model - explicitly defaulted dtor */
 	virtual ~event_model() = default;
 
+	/* add_source - add an event source to this model
+	 *
+	 * Adds an source that this model will use for finding events.
+	 */
+	virtual void add_source(event_backend_interface* source);
 	/* update - try to update the model
 	 *
-	 * Returns true if the update was successfull false otherwise
+	 * Returns true if there are new events.
 	 *
-	 * This function updates the model removing passed events and getting new
-	 * ones from the Google Calendar if the cooldown period has passed
+	 * This function updates the model removing past events and getting new
+	 * ones from the event backends registered to this model.
 	 */
 	virtual bool update();
 
 	/* events - return the list of events
 	 *
-	 * Returns a list containing the events in this model
+	 * Returns a list containing the events in this model.
 	 */
 	virtual std::list<event> events() const;
 	
 protected:
-	time_duration cooldown_;
-	db_connection db_;
 	std::list<event> events_;
-	time_duration pop_cooldown_;
-	std::string id_;
-	std::string key_;
-	ptime last_update_;
+	std::list<event_backend_interface*> event_sources_;
 };
 }
