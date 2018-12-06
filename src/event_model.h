@@ -1,6 +1,7 @@
 #pragma once
 
 #include <list>
+#include <memory>
 #include <string>
 
 #include "event.h"
@@ -22,10 +23,11 @@ public:
 	virtual ~event_model() = default;
 
 	/* add_source - add an event source to this model
+	 * @source: shared pointer to the event backend
 	 *
 	 * Adds an source that this model will use for finding events.
 	 */
-	virtual void add_source(event_backend_interface* source);
+	virtual void add_source(std::shared_ptr<event_backend_interface> source);
 	/* update - try to update the model
 	 *
 	 * Returns true if there are new events.
@@ -43,6 +45,6 @@ public:
 	
 protected:
 	std::list<event> events_;
-	std::list<event_backend_interface*> event_sources_;
+	std::list<std::shared_ptr<event_backend_interface>> event_sources_;
 };
 }
