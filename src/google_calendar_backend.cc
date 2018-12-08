@@ -46,9 +46,6 @@ events::google_calendar_backend::set_key(const std::string& key)
 std::optional<std::list<events::event>>
 events::google_calendar_backend::update()
 {
-	if (was_error_)
-		was_error_ = false;
-
 	// Format the Google API request using UTC time to make things easier
 	auto now = second_clock::universal_time();
 
@@ -109,6 +106,9 @@ events::google_calendar_backend::update()
 		} catch (...) {
 			return std::nullopt;
 		}
+
+		if (was_error_)
+			was_error_ = false;
 
 		return events;
 	}
