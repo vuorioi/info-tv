@@ -5,8 +5,8 @@
 
 #include <boost/date_time.hpp>
 
-using namespace boost::posix_time;
-using namespace boost::gregorian;
+using boost::posix_time::ptime;
+using boost::posix_time::time_period;
 
 namespace events {
 /* event class

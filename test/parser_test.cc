@@ -9,6 +9,9 @@
 #include "event.h"
 #include "parser.h"
 
+using namespace boost::gregorian;
+using namespace boost::posix_time;
+
 static std::string read_json(const char *filename)
 {
 	std::string contents;

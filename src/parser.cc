@@ -9,6 +9,11 @@
 #include "event.h"
 #include "icalendar.h"
 
+#include <boost/date_time.hpp>
+
+using boost::posix_time::time_from_string;
+using boost::gregorian::from_string;
+
 /* parse_datetime - parse date and time from the json provided by the Google
  * API
  * @src: string containing the date and time

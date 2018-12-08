@@ -4,6 +4,9 @@
 
 #include "event.h"
 
+using namespace boost::gregorian;
+using namespace boost::posix_time;
+
 BOOST_AUTO_TEST_CASE(ctor_test)
 {
 	constexpr wchar_t event_name[] = L"event name";
@@ -92,7 +95,7 @@ BOOST_AUTO_TEST_CASE(assignment_operator_test)
 	BOOST_TEST(event1.location() == event2.location());
 }
 
-BOOST_AUTO_TEST_CASE(duration_test)
+BOOST_AUTO_TEST_CASE(set_duration_test)
 {
 	constexpr wchar_t event_name[] = L"event name";
 
@@ -117,7 +120,7 @@ BOOST_AUTO_TEST_CASE(duration_test)
 	BOOST_CHECK_EQUAL(event1.duration(), time_period(start2, end2));
 }
 	
-BOOST_AUTO_TEST_CASE(name_test)
+BOOST_AUTO_TEST_CASE(set_name_test)
 {
 	constexpr wchar_t event_name1[] = L"event name";
 	constexpr wchar_t event_name2[] = L"another name";
@@ -134,7 +137,7 @@ BOOST_AUTO_TEST_CASE(name_test)
 	BOOST_TEST(event1.name().data() == event_name2);
 }
 
-BOOST_AUTO_TEST_CASE(location_test)
+BOOST_AUTO_TEST_CASE(set_location_test)
 {
 	constexpr wchar_t event_name[] = L"event name";
 	constexpr wchar_t event_location1[] = L"event location";

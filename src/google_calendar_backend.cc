@@ -4,6 +4,7 @@
 
 using boost::posix_time::seconds;
 using boost::posix_time::min_date_time;
+using boost::posix_time::second_clock;
 
 events::google_calendar_backend::google_calendar_backend() :
 	cooldown_{1, 0, 0, 0},
