@@ -55,10 +55,8 @@ int main(int argc, char** argv)
 
 	try {
 		params = util::parse_commandline(argc, argv);
-	} catch (const std::logic_error& e) {
-		std::cout << "Failed to parse arguments: "
-			  << e.what()
-			  << "\n\n";
+	} catch (const std::exception& e) {
+		std::cout << "Failed to parse arguments\n\n";
 		print_help(argv[0]);
 		return -1;
 	}
