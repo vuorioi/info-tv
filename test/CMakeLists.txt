@@ -26,11 +26,11 @@ target_link_libraries(status_view_test
 	${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
 add_executable(google_calendar_backend_test google_calendar_backend_test.cc)
-target_link_libraries(google_calendar_backend_test.cc
-	Events
+target_link_libraries(google_calendar_backend_test
+	Event
 	${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
 add_executable(pop_calendar_backend_test pop_calendar_backend_test.cc)
-target_link_libraries(pop_calendar_backend_test.cc
-	Events
+target_link_libraries(pop_calendar_backend_test
+	Event
 	${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
