@@ -6,6 +6,10 @@
 
 #include "git_commit_rev.h"
 
+util::status_view::status_view() :
+	logo_{nullptr}
+{}
+
 util::status_view::~status_view()
 {
 	if (logo_)
