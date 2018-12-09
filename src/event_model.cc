@@ -8,7 +8,6 @@
 #include <boost/date_time.hpp>
 
 using boost::posix_time::second_clock;
-//using boost::gregorian;
 
 static bool add_events(std::list<events::event>& dst,
 		       const std::list<events::event>& src);
@@ -84,15 +83,13 @@ struct event_comparison {
 	 * if the rhs event starts after the lhs event.
 	 *
 	 * Events are considered to be the same if their names are close to
-	 * each other and if they have the same duration and if their locations
-	 * are close to each other.
+	 * each other and if their durations intersect.
 	 */
 	bool
 	operator()(const events::event& rhs)
 	{
 		if (are_close(lhs_.name(), rhs.name()) and
-		    lhs_.duration() == rhs.duration() and
-		    are_close(lhs_.location(), rhs.location())) {
+		    lhs_.duration().intersects(rhs.duration())) {
 			is_same_ = true;
 			return true;
 		} else {
