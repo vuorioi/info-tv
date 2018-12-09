@@ -15,12 +15,15 @@ using boost::posix_time::ptime;
 using boost::posix_time::time_duration;
 
 namespace events {
+/* google_calendar_backend class
+ * This class provides an event backend to the Google Calendars.
+ */
 class google_calendar_backend : public event_backend_interface {
 public:
 	/* ctor
 	 *
-	 * This ctor creates an Google Calendar backend object with cooldown
-	 * period of 1 hour and an error cooldown of 10 minutes
+	 * This ctor creates a Google Calendar backend object with cooldown
+	 * period of 1 hour and an error cooldown of 10 minutes.
 	 */
 	google_calendar_backend();
 	/* explicitly deleted copy ctor */
