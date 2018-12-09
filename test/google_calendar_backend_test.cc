@@ -2,13 +2,16 @@
 #include <boost/test/unit_test.hpp>
 
 #include <chrono>
-#include <thead>
+#include <thread>
 
 #include "google_calendar_backend.h"
 
+using namespace boost::gregorian;
+using namespace boost::posix_time;
+
 BOOST_AUTO_TEST_CASE(ctor)
 {
-	google_calendar_backend backend;
+	events::google_calendar_backend backend;
 
 	BOOST_CHECK_EQUAL(backend.cooldown(), hours(1));
 	BOOST_CHECK_EQUAL(backend.error_cooldown(), minutes(10));
@@ -20,7 +23,7 @@ BOOST_AUTO_TEST_CASE(lower_cooldown_test)
 {
 	constexpr unsigned cooldown_secs = 2;
 	constexpr unsigned error_cooldown_secs = 1;
-	google_calendar_backend backend;
+	events::google_calendar_backend backend;
 
 	backend.set_cooldown(cooldown_secs);
 	backend.set_error_cooldown(error_cooldown_secs);
@@ -45,7 +48,7 @@ BOOST_AUTO_TEST_CASE(lower_cooldown_test)
 
 BOOST_AUTO_TEST_CASE(set_cooldown_value_test)
 {
-	google_calendar_backend backend;
+	events::google_calendar_backend backend;
 
 	backend.set_cooldown(600);
 
@@ -54,7 +57,7 @@ BOOST_AUTO_TEST_CASE(set_cooldown_value_test)
 
 BOOST_AUTO_TEST_CASE(set_error_cooldown_value_test)
 {
-	google_calendar_backend backend;
+	events::google_calendar_backend backend;
 
 	backend.set_error_cooldown(60);
 
@@ -65,7 +68,7 @@ BOOST_AUTO_TEST_CASE(set_id_test)
 {
 	constexpr char id[] = "test_id";
 
-	google_calendar_backend backend;
+	events::google_calendar_backend backend;
 
 	backend.set_id(id);
 
@@ -76,23 +79,23 @@ BOOST_AUTO_TEST_CASE(set_key_test)
 {
 	constexpr char key[] = "AXXGAE";
 
-	google_calendar_backend backend;
+	events::google_calendar_backend backend;
 
-	backend.set_id(key);
+	backend.set_key(key);
 
 	BOOST_TEST(backend.key() == key);
 }
 
 BOOST_AUTO_TEST_CASE(update_test)
 {
-	google_calendar_backend backend;
+	events::google_calendar_backend backend;
 
 	BOOST_CHECK_NO_THROW(backend.update());
 }
 
 BOOST_AUTO_TEST_CASE(ready_test)
 {
-	google_calendar_backend backend;
+	events::google_calendar_backend backend;
 
 	BOOST_TEST(backend.ready());
 
