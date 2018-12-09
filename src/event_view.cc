@@ -31,9 +31,15 @@ events::event_view::draw(ui::win& win) const
 		const unsigned event_space = 4 +
 					     location_space;
 
-		// Create a window in the parent windows current position and
-		// render all of the necessary stuff in it. If the name is too
-		// long it's shortened
+		if (win.remaining_height() < event_space)
+			break;
+
+		if (win.remaining_height() < event_space)
+			break;
+
+		// Create a window in the parent windows curren position and
+		// render all of the necessary stuff in it. If the name or the
+		// description is too long they are shortened
 		ui::win event_win{&win,
 				  {win.curx(), win.cury()},
 				  {win.curx() + win.max_width(),
@@ -123,8 +129,6 @@ events::event_view::draw(ui::win& win) const
 			 .newline();
 
 		event_win.draw();
-		
-		//TODO if space is full stop
 	}
 }
 

@@ -6,21 +6,30 @@ find_package(Boost REQUIRED COMPONENTS date_time)
 
 include_directories(${Boost_INCLUDE_DIRS})
 
+add_library(Utility
+	utility.cc)
+
 add_library(Ui
 	ui.cc)
 target_link_libraries(Ui
 	ncursesw)
+
+add_library(iCalendar
+	icalendar.cc)
 
 add_library(Event
 	db_connection.cc
 	event.cc
 	event_model.cc
 	event_view.cc
-	parser.cc)
+	google_calendar_backend.cc
+	parser.cc
+	pop_calendar_backend.cc)
 target_link_libraries(Event
 	curl
 	nlohmann_json::nlohmann_json
 	Ui
+	iCalendar
 	${Boost_DATE_TIME_LIBRARY})
 
 add_library(Status
@@ -32,4 +41,5 @@ add_executable(info-tv main.cc)
 target_link_libraries(info-tv
 	Event
 	Status
-	Ui)
+	Ui
+	Utility)

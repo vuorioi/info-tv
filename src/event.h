@@ -5,8 +5,8 @@
 
 #include <boost/date_time.hpp>
 
-using namespace boost::posix_time;
-using namespace boost::gregorian;
+using boost::posix_time::ptime;
+using boost::posix_time::time_period;
 
 namespace events {
 /* event class
@@ -28,7 +28,7 @@ public:
 	event(const event& rhs) = default;
 
 	/* ~event - explicitly defaulted dtor */
-	virtual ~event() = default;
+	~event() = default;
 
 	/* set_duration - set the event duration
 	 * @start: boost::posix_time::ptime representation of the start time
@@ -37,36 +37,36 @@ public:
 	 * Sets the event to span from start to end. Throws std::logica_error if
 	 * start > end
 	 */
-	virtual void set_duration(const ptime& start, const ptime& end);
+	void set_duration(const ptime& start, const ptime& end);
 	/* set_location - set the event location
 	 * @location: location string
 	 *
 	 * Sets the event location to be the supplied string
 	 */
-	virtual void set_location(const std::wstring& location);
+	void set_location(const std::wstring& location);
 	/* set_name - set the event name
 	 * @name: name string
 	 *
 	 * Sets the event name to be the supplied string
 	 */
-	virtual void set_name(const std::wstring& name);
+	void set_name(const std::wstring& name);
 
 	/* duration -  get the event duration
 	 *
 	 * Returns a boost::posix_time::time_period object representing the span
 	 * of this event
 	 */
-	virtual time_period duration() const;
+	time_period duration() const;
 	/* location - get the event location
 	 *
 	 * Returns a string view of the event duration
 	 */
-	virtual std::wstring_view location() const;
+	std::wstring_view location() const;
 	/* name - get the event name
 	 *
 	 * Return a string view of the event name
 	 */
-	virtual std::wstring_view name() const;
+	std::wstring_view name() const;
 
 protected:
 	time_period duration_;

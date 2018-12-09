@@ -108,7 +108,7 @@ public:
 	 * 
 	 * This function frees the curses window data
 	 */
-	virtual ~win();
+	~win();
 
 	/* newline - adds a newline
 	 *
@@ -116,7 +116,7 @@ public:
 	 *
 	 * This function shifts the cursor down one line
 	 */
-	virtual win& newline();
+	win& newline();
 	/* newline - add a number of newline
 	 * @lines: the number of lines to shift
 	 *
@@ -124,7 +124,7 @@ public:
 	 *
 	 * This function shifts the cursor down a number of lines
 	 */
-	virtual win& newline(unsigned lines);
+	win& newline(unsigned lines);
 	/* add_text - add a text to the window
 	 * @text: text to add
 	 * @type: effect to use in rendering, default to normal
@@ -136,9 +136,9 @@ public:
 	 * This function renders text to the window using the effect and position
 	 * defined
 	 */
-	virtual win& add_text(const std::wstring& text,
-			      const unsigned type = normal,
-			      const unsigned pos = append);
+	win& add_text(const std::wstring& text,
+		      const unsigned type = normal,
+		      const unsigned pos = append);
 	/* add_ascii_image - add image to the window
 	 * @img: reference to the image to add
 	 * @type: effect to use in rendering, defaults to normal
@@ -150,38 +150,43 @@ public:
 	 * This function renders an image to the window using the effect and
 	 * position defined
 	 */
-	virtual win& add_ascii_image(const ascii_image& img,
-				     const unsigned type = normal,
-				     const unsigned pos = append);
+	win& add_ascii_image(const ascii_image& img,
+			     const unsigned type = normal,
+			     const unsigned pos = append);
 
-	/* get_win - get the underlaying ncurses window
-	 *
-	 * Returns a pointer to the underlaying ncurses window structure
-	 */
-	virtual WINDOW* get_win() const;
-	/* curx - get the cursor x position
-	 *
-	 * Returns the current cursor x position inside the window. Value 0 means
-	 * the first column starting from left
-	 */
-	virtual unsigned curx() const;
-	/* cury - get the cursor y position
-	 *
-	 * Returns the current cursor y position inside the window. Value 0 means
-	 * the first line starting from the top
-	 */
-	virtual unsigned cury() const;
-	/* max_width - get the maximum width of item
-	 *
-	 * Returns  the maximum width of an item inside this window
-	 */
-	virtual unsigned max_width() const;
 	/* draw - draw this window
 	 *
 	 * This function should be called when all of the contents is added
 	 * to render the window
 	 */
-	virtual void draw() const;
+	void draw() const;
+	/* get_win - get the underlaying ncurses window
+	 *
+	 * Returns a pointer to the underlaying ncurses window structure
+	 */
+	WINDOW* get_win() const;
+	/* curx - get the cursor x position
+	 *
+	 * Returns the current cursor x position inside the window. Value 0 means
+	 * the first column starting from left
+	 */
+	unsigned curx() const;
+	/* cury - get the cursor y position
+	 *
+	 * Returns the current cursor y position inside the window. Value 0 means
+	 * the first line starting from the top
+	 */
+	unsigned cury() const;
+	/* max_width - get the maximum width of item
+	 *
+	 * Returns the maximum width of an item inside this window
+	 */
+	unsigned max_width() const;
+	/* remaining_height - get the remaining vertical space
+	 * 
+	 * Returns the remaining vertical space in this window
+	 */
+	unsigned remaining_height() const;
 
 private:
 	static constexpr unsigned x_padding = 2;

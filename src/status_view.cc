@@ -6,19 +6,24 @@
 
 #include "git_commit_rev.h"
 
-util::status_view::status_view()
-{
-	std::ifstream stream{"logo.ascii"};
-	if (stream.is_open())
-		logo_ = new ui::ascii_image{stream};
-	else
-		logo_ = nullptr;
-}
+util::status_view::status_view() :
+	logo_{nullptr}
+{}
 
 util::status_view::~status_view()
 {
 	if (logo_)
 		delete logo_;
+}
+
+void
+util::status_view::set_logo(const std::string& path)
+{
+	std::ifstream stream{path};
+	if (stream.is_open())
+		logo_ = new ui::ascii_image{stream};
+	else
+		logo_ = nullptr;
 }
 
 void
@@ -36,8 +41,9 @@ util::status_view::set_system_message(const std::wstring& msg)
 void
 util::status_view::draw(ui::win& win) const
 {
-	const unsigned height = (logo_ ? logo_->height + 4 : 4) + 
-				(system_msg_.empty() ? 0 : 2);
+	const unsigned logo_height = logo_ ? logo_->height : 0;
+	const unsigned msg_height = system_msg_.empty() ? 0 : 3;
+	const unsigned height = 3 + logo_height + msg_height;
 
 	ui::win status_win{&win,
 			   {win.curx(), win.cury()},
