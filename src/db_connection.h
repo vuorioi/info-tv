@@ -23,7 +23,7 @@ public:
 	db_connection(const db_connection& rhs) = delete;
 
 	/* ~db_connection - explicitly defaulted dtor */
-	virtual ~db_connection() = default;
+	~db_connection() = default;
 
 	/* get_response - perform the request
 	 * 
@@ -33,19 +33,19 @@ public:
 	 *
 	 * This call blocks until curl has performed the http reequest!
 	 */
-	virtual std::string get_response();
+	std::string get_response();
 	/* set_request - sets the request string
 	 * @request: the string to use as request
 	 *
 	 * The string is used as the url of the http request
 	 */
-	virtual void set_request(const std::string& request);
+	void set_request(const std::string& request);
 
 	/* request - returns the request string
 	 *
 	 * Returns a string view  to the string used as the request string
 	 */
-	virtual std::string_view request() const;
+	std::string_view request() const;
 
 protected:
 	CURL* handle_;

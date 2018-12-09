@@ -18,49 +18,47 @@ namespace util {
  */
 class status_view : public view_interface {
 public:
-	/* explicitly defaulted ctor */
-	status_view() = default;
-	
+	status_view();
 	/* ~status_view - dtor
 	 *
-	 * This function fress  the logo if it was loaded by the ctor
+	 * This function frees  the logo if it was allocated
 	 */
-	virtual ~status_view();
+	~status_view();
 
 	/* set_logo - set system logo
 	 * @path: path to the logo file
 	 *
 	 * This function sets the logo displayed at the top of the screen
 	 */
-	virtual void set_logo(const std::string& path);
+	void set_logo(const std::string& path);
 	/* set_system_time - set the displayed time
 	 * @time: boost::posix_time::ptime representation of time
 	 *
 	 * This function sets the time rendered by the view
 	 */
-	virtual void set_system_time(const ptime& time);
+	void set_system_time(const ptime& time);
 	/* set_system_message - set the displayed message
 	 * @message: message displayed
 	 *
 	 * This function sets the system message which is displayed with
 	 * highlights
 	 */
-	virtual void set_system_message(const std::wstring& msg);
+	void set_system_message(const std::wstring& msg);
 
-	/* overriden from the view_interface */
-	virtual void draw(ui::win& win) const override;
-	virtual unsigned height() const override;
+	/* implemented from the view_interface */
+	void draw(ui::win& win) const override;
+	unsigned height() const override;
 	/* system_time - return the displayed time
 	 *
 	 * Returns boost::posix_time::ptime representation of the rendered
 	 * time
 	 */
-	virtual ptime system_time() const;
+	ptime system_time() const;
 	/* system_message - return the system message
 	 *
 	 * Returns a string view to the system message rendered
 	 */
-	virtual std::wstring_view system_message() const;
+	std::wstring_view system_message() const;
 
 protected:
 	ui::ascii_image* logo_;

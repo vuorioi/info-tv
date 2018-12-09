@@ -20,14 +20,14 @@ public:
 	event_model(const event_model& rhs) = delete;
 	
 	/* ~event_model - explicitly defaulted dtor */
-	virtual ~event_model() = default;
+	~event_model() = default;
 
 	/* add_source - add an event source to this model
 	 * @source: shared pointer to the event backend
 	 *
 	 * Adds an source that this model will use for finding events.
 	 */
-	virtual void add_source(std::shared_ptr<event_backend_interface> source);
+	void add_source(std::shared_ptr<event_backend_interface> source);
 	/* update - try to update the model
 	 *
 	 * Returns true if there are new events.
@@ -35,13 +35,13 @@ public:
 	 * This function updates the model removing past events and getting new
 	 * ones from the event backends registered to this model.
 	 */
-	virtual bool update();
+	bool update();
 
 	/* events - return the list of events
 	 *
 	 * Returns a list containing the events in this model.
 	 */
-	virtual std::list<event> events() const;
+	std::list<event> events() const;
 	
 protected:
 	std::list<event> events_;

@@ -31,46 +31,46 @@ public:
 	pop_calendar_backend(const pop_calendar_backend& rhs) = delete;
 	
 	/* explicitly defaulted copy ctor */
-	virtual ~pop_calendar_backend() = default;
+	~pop_calendar_backend() = default;
 
 	/* lower_cooldown - implemented from the event_backend_interface */
-	virtual void lower_cooldown() override;
+	void lower_cooldown() override;
 	/* set_cooldown - sets the normal cooldown value
 	 * @seconds: cooldown in seconds
 	 */
-	virtual void set_cooldown(unsigned long seconds);
+	void set_cooldown(unsigned long seconds);
 	/* set_error_cooldown - sets the error cooldown value
 	 * @seconds: error cooldown in seconds
 	 */
-	virtual void set_error_cooldown(unsigned long seconds);
+	void set_error_cooldown(unsigned long seconds);
 	/* set_url - set the url used as source
 	 * @url: url to use
 	 *
 	 * Sets the url where the calendar data is requested from
 	 */
-	virtual void set_url(const std::string& url);
+	void set_url(const std::string& url);
 	/* update - implemented from the event_backend_interface */
-	virtual std::optional<std::list<event>> update() override;
+	std::optional<std::list<event>> update() override;
 
 	/* cooldown - get the cooldown value
 	 *
 	 * Returns boost::posix_time::time_duration representation of the
 	 * cooldown.
 	 */
-	virtual time_duration cooldown() const;
+	time_duration cooldown() const;
 	/* error_cooldown - ge the error cooldown value
 	 *
 	 * Returns boost::posix_time::time_duration representation of the 
 	 * error cooldown value.
 	 */
-	virtual time_duration error_cooldown() const;
+	time_duration error_cooldown() const;
 	/* ready - implemented from the event_backend_interface */
-	virtual bool ready() const override;
+	bool ready() const override;
 	/* url - get the url
 	 *
 	 * Returns a string view to the url used by this backend as the source
 	 */
-	virtual std::string_view url() const;
+	std::string_view url() const;
 
 protected:
 	time_duration cooldown_;

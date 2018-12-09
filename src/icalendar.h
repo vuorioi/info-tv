@@ -44,7 +44,7 @@ struct node {
 	std::list<node>
 	subnode(const std::string& subnode_name)
 	{
-		return subnodes.at(name);
+		return subnodes.at(subnode_name);
 	}
 
 	std::string name;
