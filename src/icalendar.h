@@ -8,9 +8,17 @@
 #include <utility>
 
 namespace icalendar {
+/* node struct
+ * This struct represents an icalendar node.
+ */
 struct node {
 	node() = default;
 
+	/* operator[] - find a property
+	 * @property_name: name of the property to search for
+	 *
+	 * Returns the value of the property or empty string.
+	 */
 	std::string
 	operator[](const std::string property_name)
 	{
@@ -28,8 +36,13 @@ struct node {
 		return it->second;
 	}
 
+	/* subnodes - get subnodes
+	 * @subnode_name: name of the subnode
+	 * 
+	 * Returns a list of all the subnodes with the name.
+	 */
 	std::list<node>
-	subnode(const std::string& name)
+	subnode(const std::string& subnode_name)
 	{
 		return subnodes.at(name);
 	}
@@ -39,9 +52,12 @@ struct node {
 	std::map<std::string, std::list<node>> subnodes;
 };
 
-//std::string clean(std::string&& str);
+/* parse - parse the icalendar data
+ * @src: string containing icalendar data
+ *
+ * Returns a root node of the icalendar data
+ *
+ * This function parses icalendar data from the string and returns the root node
+ */
 node parse(const std::string& src);
-//node parse_node(std::stringstream& src, const std::string& node_name);
-//std::pair<std::string, std::string> parse_property(const std::string& line);
-//std::string trim(const std::string& str, const std::string& whitespace = " \r");
 }

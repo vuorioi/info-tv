@@ -3,10 +3,33 @@
 #include <sstream>
 #include <stdexcept>
 
+/* clean - remove abnormalities in strings
+ * @clean: string to clean
+ *
+ * Returns the modified string via std::move
+ */
 static std::string clean(std::string&& str);
+/* parse_node - parse icalendar node
+ * @src: stringstream containing the icalendar data
+ * @node_name: name of the node to parse
+ *
+ * Returns a node that can contain properties and subnodes
+ *
+ * This function is called recursively for all nodes found from the source
+ * stringstream
+ */
 static icalendar::node parse_node(std::stringstream& src,
 				  const std::string& node_name);
+/* parse_property - parse a property name and value from string
+ * @line: string containing name na value pair
+ *
+ * Returns a pair containing the property name and pair
+ */
 static std::pair<std::string, std::string> parse_property(const std::string& line);
+/* trim - remove whitespaces from a string
+ * @str: string to trim
+ * @whitespace: string containing the characers to remove
+ */
 static std::string trim(const std::string& str,
 			const std::string& whitespace = " \r");
 
@@ -15,7 +38,7 @@ icalendar::parse(const std::string& src)
 {
 	std::stringstream src_ss{src};
 
-	if (not src_ss.eof()) {
+	while (not src_ss.eof()) {
 		std::string line;
 		std::getline(src_ss, line);
 
@@ -37,6 +60,7 @@ icalendar::parse(const std::string& src)
 static std::string
 clean(std::string&& str)
 {
+	// Replace the "\," with just ","
 	for (auto i = str.find("\\,"); i != std::string::npos; i = str.find("\\,"))
 		str.replace(i, 2, ",");
 
