@@ -1,37 +1,23 @@
 #pragma once
 
-#include <array>
 #include <string>
 #include <utility>
 #include <vector>
 
 
 namespace util {
-	std::vector<std::pair<std::string, std::string>> parse_commandline(const int count,
-									   char** vector);
-	template<std::size_t Count>
-	std::array<std::string, Count> parse_value(const std::string& value)
-	{
-		std::array<std::string, Count> temp;
-		std::size_t start = 0;
-
-		for (std::size_t i = 0; i < Count; i++) {
-			std::size_t end = value.find_first_of(',', start);
-			std::size_t size;
-			
-			if (end != std::string::npos)
-				size = end - start;
-			else
-				size = std::string::npos;
-
-			temp[i] = value.substr(start, size);
-
-			start = end + 1;
-
-			if (size == std::string::npos)
-				break;
-		}
-
-		return temp;
-	}
+	/* parse_commandline - parse arguments
+	 * @count: size of vector
+	 * @vector: commandline options
+	 *
+	 * Returns a vector of pairs containing the argument name and a vector
+	 * of values if any where passed for the argument.
+	 *
+	 * This function expects the commandline arguments to be formated as
+	 * such:
+	 *   --name0 value0 value1 --name1 value0 ...
+	 */
+	std::vector<std::pair<std::string,
+			      std::vector<std::string>>>
+	parse_commandline(const int count, const char** vector);
 }

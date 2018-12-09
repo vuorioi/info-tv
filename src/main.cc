@@ -37,7 +37,7 @@ struct system_messages {
 } system_messages;
 
 
-int main(int argc, char** argv)
+int main(int argc, const char** argv)
 {
 	using namespace std::chrono_literals;
 
@@ -51,7 +51,7 @@ int main(int argc, char** argv)
 	views.push_back(&calendar_view);
 
 	// Create the event model and register the backends parsed from commandline to it
-	std::vector<std::pair<std::string, std::string>> params;
+	std::vector<std::pair<std::string, std::vector<std::string>>> params;
 
 	try {
 		params = util::parse_commandline(argc, argv);
@@ -64,41 +64,86 @@ int main(int argc, char** argv)
 	events::event_model calendar_model;
 	std::list<std::shared_ptr<events::event_backend_interface>> backends;
 
-	for (auto param : params) {
-		if (param.first == "help") {
+	for (auto [name, values] : params) {
+		if (name == "help") {
 			print_help(argv[0]);
 			return 0;
-		} else if (param.first == "version") {
+		} else if (name == "version") {
 			print_version();
 			return 0;
 		}
 
-		if (param.first == "google-api") {
-			auto parsed = util::parse_value<4>(param.second);
-			auto backend = std::make_shared<events::google_calendar_backend>();
+		if (name == "google-api") {
+			if (values.size() == 2) {
+				auto backend = std::make_shared<events::google_calendar_backend>();
 
-			backend->set_id(parsed[0]);
-			backend->set_key(parsed[1]);
-			backend->set_cooldown(std::stoi(parsed[2]));
-			backend->set_error_cooldown(std::stoi(parsed[3]));
+				backend->set_id(values[0]);
+				backend->set_key(values[1]);
 
-			backends.emplace_back(std::make_shared<events::google_calendar_backend>());
-			calendar_model.add_source(backend);
-		} else if (param.first == "pop-api") {
-			auto parsed = util::parse_value<3>(param.second);
-			auto backend = std::make_shared<events::pop_calendar_backend>();
+				backends.emplace_back(std::move(backend));
+				calendar_model.add_source(backends.back());
+			} else if (values.size() == 4) {
+				auto backend = std::make_shared<events::google_calendar_backend>();
 
-			backend->set_url(parsed[0]);
-			backend->set_cooldown(std::stoi(parsed[1]));
-			backend->set_error_cooldown(std::stoi(parsed[2]));
+				backend->set_id(values[0]);
+				backend->set_key(values[1]);
 
-			backends.push_back(std::move(backend));
-			calendar_model.add_source(backends.back());
-		} else if (param.first == "logo") {
-			status.set_logo(param.second);
+				try {
+					backend->set_cooldown(std::stoi(values[2]));
+					backend->set_error_cooldown(std::stoi(values[3]));
+				} catch (const std::exception& e) {
+					std::cout << "Invalid cooldown argument for --google-api\n\n";
+					print_help(argv[0]);
+					return -1;
+				}
+
+				backends.emplace_back(std::move(backend));
+				calendar_model.add_source(backends.back());
+			} else {
+				std::cout << "Wrong amount of arguments for --google-api\n\n";
+				print_help(argv[0]);
+				return -1;
+			}
+		} else if (name == "pop-api") {
+			if (values.size() == 1) {
+				auto backend = std::make_shared<events::pop_calendar_backend>();
+
+				backend->set_url(values[0]);
+
+				backends.push_back(std::move(backend));
+				calendar_model.add_source(backends.back());
+			} else if (values.size() == 3) {
+				auto backend = std::make_shared<events::pop_calendar_backend>();
+
+				backend->set_url(values[0]);
+
+				try {
+					backend->set_cooldown(std::stoi(values[1]));
+					backend->set_error_cooldown(std::stoi(values[2]));
+				} catch (const std::exception& e) {
+					std::cout << "Invalid cooldown argument for --pop-api\n\n";
+					print_help(argv[0]);
+					return -1;
+				}
+
+				backends.push_back(std::move(backend));
+				calendar_model.add_source(backends.back());
+			} else {
+				std::cout << "Wrong amount of arguments for --pop-api\n\n";
+				print_help(argv[0]);
+				return -1;
+			}
+		} else if (name == "logo") {
+			if (values.size() == 1) {
+				status.set_logo(values[0]);
+			} else {
+				std::cout << "Wrong amount of arguments for --logo\n\n";
+				print_help(argv[0]);
+				return -1;
+			}
 		} else {
 			std::cout << "Unknown option '"
-				  << param.first
+				  << name
 				  << "'.\n\n";
 			print_help(argv[0]);
 			return -1;
@@ -170,20 +215,20 @@ static void print_help(const char* name)
 {
 	std::cout << "Usage:\n"
 		  << "  " << name << " [ --help | --version ]\n"
-		  << "  " << name << " [options]\n\n"
-		  << "  <id> is the Google Calendar id and <key> is the API key that can be used\n"
-		  << "  to access the Calendar.\n\n"
+		  << "  " << name << " [ options ]\n\n"
 		  << "Options:\n"
-		  << "  --pop-api <url>,<cd>,<ecd>\n"
+		  << "  --pop-api <url> [ <cd> <ecd> ]\n"
 		  << "                         Add a POP backend with the <url> pointing to the ics\n"
 		  << "                         resource. <cd> is the cooldown period in seconds and\n"
 		  << "                         <ecd> is the cooldown period used if the connection\n"
 		  << "                         to server failed.\n"
-		  << "  --google-api <id>,<key>,<cd>,<ecd>\n"
+		  << "  --google-api <id> <key> [ <cd> <ecd> ]\n"
 		  << "                         Add a Google backend with the calendar id <id> and API\n"
 		  << "                         key <key>. <cd> is the cooldown period in seconds\n"
 		  << "                         and <ecd> is the cooldown period used if the connection\n"
-		  << "                         to server failed.\n";
+		  << "                         to server failed.\n"
+		  << "  --logo <path>          Path to a text file containing the ascii graphic logo\n"
+		  << "                         to display at the top of the screen.\n";
 }
 
 static void print_version()
