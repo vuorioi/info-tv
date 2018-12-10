@@ -11,11 +11,13 @@ using boost::posix_time::second_clock;
 
 static bool add_events(std::list<events::event>& dst,
 		       const std::list<events::event>& src);
+static void combine_with(events::event& lhs, const events::event& rhs);
+static void update_to(events::event& lhs, const events::event& rhs);
 
 void
 events::event_model::add_source(std::shared_ptr<event_backend_interface> source)
 {
-	event_sources_.push_back(source);
+	event_sources_.push_back(std::pair(source, std::list<event>{}));
 }
 
 bool
@@ -23,27 +25,25 @@ events::event_model::update()
 {
 	bool new_events = false;
 
-	for (auto source : event_sources_) {
-		// If source cooldown has expired update events
-		// and on success add events to model's event list.
-		// on a failure the sources cooldown is lowered to
-		// schedule a retry sooner
+	for (auto& [source, source_events] : event_sources_) {
 		if (source->ready()) {
 			auto result = source->update();
 
-			if (result.has_value())
-				(add_events(events_, result.value()) or
-				 new_events) ? new_events = true :
-					       new_events = false;
-			else
+			if (result.has_value()) {
+				new_events = true;
+				source_events = result.value();
+			} else {
 				source->lower_cooldown();
+				continue;
+			}
+		} else {
+			source_events.remove_if([](const events::event& e) {
+				return e.duration().end() <
+				       second_clock::local_time();
+			});
 		}
+
 	}
-	
-	// Remove events that have already ended
-	events_.remove_if([](const events::event& e) {
-		return e.duration().end() < second_clock::local_time();
-	});
 
 	return new_events;
 }
@@ -51,7 +51,12 @@ events::event_model::update()
 std::list<events::event>
 events::event_model::events() const
 {
-	return events_;
+	std::list<event> events;
+
+	for (auto& [source, source_events] : event_sources_)
+		add_events(events, source_events);
+
+	return events;
 }
 
 /* event_comparison structure
@@ -60,35 +65,23 @@ events::event_model::events() const
  * to any other event or if any other event start after the lhs event.
  */
 struct event_comparison {
-	/* event_comparison - ctor */
 	event_comparison(const events::event& lhs) :
-		lhs_{lhs},
-		is_same_{false}
+		is_same_{false},
+		lhs_{lhs}
 	{};
 
-	/* was_equal - check if the compared rhs event was equal to lsh event
-	 *
-	 * Returns true if the last compared rhs event was (probably) the same
-	 * event as the lhs event.
-	 */
-	bool
-	was_equal() const
-	{
-		return is_same_;
-	}
 	/* operator() - compares the lhs and rhs events
 	 * @rhs: the event to compare to the lhs event
 	 *
 	 * Returns true if the events are (probably) the same or
 	 * if the rhs event starts after the lhs event.
 	 *
-	 * Events are considered to be the same if their names are close to
-	 * each other and if their durations intersect.
+	 * Events are considered to be the same if their names match.
 	 */
 	bool
 	operator()(const events::event& rhs)
 	{
-		if (are_close(lhs_.name(), rhs.name()) and
+		if (lhs_.name() == rhs.name() and
 		    lhs_.duration().intersects(rhs.duration())) {
 			is_same_ = true;
 			return true;
@@ -99,25 +92,23 @@ struct event_comparison {
 		}
 	}
 
-private:
-	/* are_close - check if strings are "close" to each other
-	 * @lhs: first wide string to compare
-	 * @rhs: second wide string to compare
-	 *
-	 * Returns true if either one of the string is a substring of the
-	 * other.
-	 */
-	static bool
-	are_close(const std::wstring_view& lhs, const std::wstring_view& rhs)
+	bool
+	was_equal() const
 	{
-		return (lhs.find(rhs) != std::string::npos or
-			rhs.find(lhs) != std::string::npos);
+		return is_same_;
 	}
 
-	const events::event& lhs_;
+private:
 	bool is_same_;
+	const events::event& lhs_;
 };
 
+/* add_events - add new events
+ * @dst: destination list
+ * @src: source list
+ *
+ * Returns true if new events where added otherwise false.
+ */
 static bool
 add_events(std::list<events::event>& dst, const std::list<events::event>& src)
 {
@@ -135,7 +126,7 @@ add_events(std::list<events::event>& dst, const std::list<events::event>& src)
 		// it. If no existing event start after this event then it is
 		// inserted to the end of the list
 		if (cmp.was_equal()) {
-			continue;
+			combine_with(*it, new_event);
 		} else {
 			dst.insert(it, std::move(new_event));
 			new_events = true;
@@ -143,4 +134,26 @@ add_events(std::list<events::event>& dst, const std::list<events::event>& src)
 	}
 
 	return new_events;
+}
+
+/* combine_with - combine contained event with another
+ * @lsh: modified event
+ * @rhs: event to combine with
+ *
+ * Combines the two events into one.
+ */
+static void
+combine_with(events::event& lhs, const events::event& rhs)
+{
+	if (lhs.name().length() < rhs.name().length())
+		lhs.set_name(rhs.name().data());
+
+	if (lhs.location().length() < rhs.location().length())
+		lhs.set_location(rhs.location().data());
+
+	auto duration = lhs.duration().span(rhs.duration());
+	auto start = duration.begin();
+	auto end = duration.end();
+
+	lhs.set_duration(start, end);
 }

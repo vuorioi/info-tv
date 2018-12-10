@@ -38,6 +38,12 @@ public:
 	 * start > end
 	 */
 	void set_duration(const ptime& start, const ptime& end);
+	/* set_id - set event id
+	 * @id: event id
+	 *
+	 * Sets the id of this event
+	 */
+	void set_id(const std::string& id);
 	/* set_location - set the event location
 	 * @location: location string
 	 *
@@ -57,6 +63,11 @@ public:
 	 * of this event
 	 */
 	time_period duration() const;
+	/* id - get the event id
+	 *
+	 * Returns a string view of the event id
+	 */
+	std::string_view id() const;
 	/* location - get the event location
 	 *
 	 * Returns a string view of the event duration
@@ -70,6 +81,7 @@ public:
 
 protected:
 	time_period duration_;
+	std::string id_;
 	std::wstring location_;
 	std::wstring name_;
 };
