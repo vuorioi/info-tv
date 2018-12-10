@@ -63,6 +63,9 @@ events::pop_calendar_backend::update()
 			return std::nullopt;
 		}
 
+		if (was_error_)
+			was_error_ = false;
+
 		return events;
 	}
 
