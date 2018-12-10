@@ -12,6 +12,7 @@
 #include <boost/date_time.hpp>
 
 using boost::posix_time::time_from_string;
+using boost::posix_time::second_clock;
 using boost::gregorian::from_string;
 
 /* parse_datetime - parse date and time from the json provided by the Google
@@ -48,17 +49,25 @@ events::parser::events_from_ics(const std::string& ics_str)
 	if (root["PRODID"] != "TUT.FI//POP-CALENDARSERVICE_V1.0//FI")
 		throw std::runtime_error{"wrong product id"};
 
-	for (auto e : root.subnode("VEVENT")) {
-		if (e["STATUS"] != "CONFIRMED")
+	for (auto event : root.subnode("VEVENT")) {
+		if (event["STATUS"] != "CONFIRMED")
 			continue;
 
-		event_list.emplace_back(events::event{converter.from_bytes(e["SUMMARY"].c_str()),
-					from_iso_string(e["DTSTART;TZID=Europe/Helsinki"]),
-					from_iso_string(e["DTEND;TZID=Europe/Helsinki"])});
-		const std::string location = e["LOCATION"];
+		// Since POP provides us with events that are 2 month old we need to only add
+		// the once that are still relevant at the moment
+		if (from_iso_string(event["DTEND;TZID=Europe/Helsinki"]) < second_clock::local_time())
+			continue;
+
+		event_list.emplace_back(events::event{converter.from_bytes(event["SUMMARY"].c_str()),
+					from_iso_string(event["DTSTART;TZID=Europe/Helsinki"]),
+					from_iso_string(event["DTEND;TZID=Europe/Helsinki"])});
+		const std::string location = event["LOCATION"];
+		const std::string id = event["UID"];
 
 		if (not location.empty())
 			event_list.back().set_location(converter.from_bytes(location.c_str()));
+		if (not id.empty())
+			event_list.back().set_id(id);
 	}
 
 	return event_list;
@@ -94,6 +103,7 @@ events::parser::events_from_json(const std::string& json_str)
 		for (auto event : events) {
 			std::string name;
 			std::string location;
+			std::string id;
 			ptime start;
 			ptime end;
 
@@ -118,6 +128,10 @@ events::parser::events_from_json(const std::string& json_str)
 				iter = event.find("location");
 				if (iter != event.end())
 					location = *iter;
+
+				iter = event.find("iCalUID");
+				if (iter != event.end())
+					id = *iter;
 
 				iter = event.find("start");
 				if (iter == event.end())
@@ -168,6 +182,8 @@ events::parser::events_from_json(const std::string& json_str)
 
 				if (not location.empty())
 					event_list.back().set_location(converter.from_bytes(location.c_str()));
+				if (not id.empty())
+					event_list.back().set_id(id);
 			} else {
 				throw std::runtime_error{"event key \"status\" has an unkown value"};
 			}
