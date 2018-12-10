@@ -3,6 +3,7 @@
 #include <list>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "event.h"
 #include "event_backend_interface.h"
@@ -14,12 +15,8 @@ namespace events {
  */
 class event_model {
 public:
-	/* event_model - explicitly defaulted ctor */
 	event_model() = default;
-	/* event_model - explicitly deleted copy ctor */
 	event_model(const event_model& rhs) = delete;
-	
-	/* ~event_model - explicitly defaulted dtor */
 	~event_model() = default;
 
 	/* add_source - add an event source to this model
@@ -44,7 +41,7 @@ public:
 	std::list<event> events() const;
 	
 protected:
-	std::list<event> events_;
-	std::list<std::shared_ptr<event_backend_interface>> event_sources_;
+	std::list<std::pair<std::shared_ptr<event_backend_interface>,
+		  std::list<event>>> event_sources_;
 };
 }
