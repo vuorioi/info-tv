@@ -26,75 +26,6 @@ BOOST_AUTO_TEST_CASE(ctor_test)
 	BOOST_TEST(event.location().data() == L"");
 }
 
-BOOST_AUTO_TEST_CASE(copy_ctor_test)
-{
-	// Case 0: description and location not set
-	constexpr wchar_t event_name[] = L"event name";
-	constexpr wchar_t event_location[] = L"event location";
-
-	const ptime start{date{2018, Jan, 2}, hours{14}};
-	const ptime end{date{2018, Jan, 4}, hours{8} + minutes{45}};
-
-	events::event event1{event_name,
-			     start,
-			     end};
-
-	events::event event2{event1};
-
-	BOOST_CHECK_EQUAL(event1.duration(), event2.duration());
-	BOOST_TEST(event1.name() == event2.name());
-	BOOST_TEST(event1.location() == event2.location());
-
-	// Case 1: description and location set
-	events::event event3{event_name,
-			     start,
-			     end};
-
-	event3.set_location(event_location);
-
-	events::event event4{event3};
-
-	BOOST_CHECK_EQUAL(event3.duration(), event4.duration());
-	BOOST_TEST(event3.name() == event4.name());
-	BOOST_TEST(event3.location() == event4.location());
-}
-
-BOOST_AUTO_TEST_CASE(assignment_operator_test)
-{
-	constexpr wchar_t event_name1[] = L"event name";
-	constexpr wchar_t event_name2[] = L"another name";
-	constexpr wchar_t event_location1[] = L"event location";
-	constexpr wchar_t event_location2[] = L"another location";
-
-	const ptime start1{date{2018, Jan, 2}, hours{14}};
-	const ptime end1{date{2018, Jan, 4}, hours{8} + minutes{45}};
-	const ptime start2{date{2018, Nov, 1}, hours{12} + minutes{30}};
-	const ptime end2{date{2018, Nov, 15}, hours{8}};
-
-	events::event event1{event_name1,
-			     start1,
-			     end1};
-
-	events::event event2{event_name2,
-			     start2,
-			     end2};
-
-	
-	event1.set_location(event_location1);
-
-	event2.set_location(event_location2);
-
-	BOOST_CHECK_PREDICATE(std::not_equal_to<time_period>(), (event1.duration())(event2.duration()) ); 
-	BOOST_TEST(event1.name() != event2.name());
-	BOOST_TEST(event1.location() != event2.location());
-	
-	event1 = event2;
-
-	BOOST_CHECK_EQUAL(event1.duration(), event2.duration());
-	BOOST_TEST(event1.name() == event2.name());
-	BOOST_TEST(event1.location() == event2.location());
-}
-
 BOOST_AUTO_TEST_CASE(set_duration_test)
 {
 	constexpr wchar_t event_name[] = L"event name";
@@ -118,6 +49,23 @@ BOOST_AUTO_TEST_CASE(set_duration_test)
 	event1.set_duration(start2, end2);
 
 	BOOST_CHECK_EQUAL(event1.duration(), time_period(start2, end2));
+}
+
+BOOST_AUTO_TEST_CASE(set_id)
+{
+	constexpr wchar_t event_name[] = L"event name";
+	constexpr char id[] = "X13fs4g";
+
+	const ptime start{date{2018, Jan, 2}, hours{14}};
+	const ptime end{date{2018, Jan, 4}, hours{8} + minutes{45}};
+
+	events::event event{event_name,
+			    start,
+			    end};
+
+	event.set_id(id);
+
+	BOOST_TEST(event.id().data() == id);
 }
 	
 BOOST_AUTO_TEST_CASE(set_name_test)
