@@ -1,28 +1,32 @@
 # Info TV
 This project implements an information TV display for a Raspberry
-Pi using a Google Calendar as the information source. The rendering is
-done (at the moment) with ncurses and the connection to the Google API is
-handled with libcurl using the Google REST API.
+Pi using a Google Calendar and TUT's POP Calendar as the information sources.
+Rendering is done (at the moment) with ncursesw and the connection to the
+APIs is handled with libcurl using the interfaces provided by TUT and Google.
 
 Google Calendar API provides the event information in a json format and this
-is parsed with the help of nlohmann's json library. Boost libraries are used
-for testing and date time utilites.
+is parsed with the help of nlohmann's json library. TUT's Calendar is provided
+in iCalendar format and a purpose built parser is used for this. Boost libraries
+are used for unit testing and date time utilites.
 
 The interfaces provided by the components are documented in the source files.
 
 ## Project structure
-The file structure of this repo is the following
- - `media/` -- This directory contains the media files used in this project
- - `src/` -- This directory contains the source files for this project
- - `test/` -- This directory contains the testing source files
- - `util/` -- This directory contains utility scripts
- - `CMakeLists.txt` -- top CMake file
- - `COPYING.md` -- license information
- - `README.md` -- this file
- - `TODO.md` -- list of things to be done in future
+The directory structure of this repo is the following
+ - `media/` -- Media files
+ - `src/` -- Source code
+ - `test/` -- Unit test sources
+ - `util/` -- Utility scripts
+ - `CMakeLists.txt`
+ - `COPYING.md` -- License information
+ - `README.md` -- This file
+ - `TODO.md` -- List of things to be done until the next release
 
 ## Dependencies
-This project depends on the following libraries:
+This project uses c++17 features an as such a relatively recent
+compiler should be used. This project alse depends on the
+following libraries (versions are the ones I have successfully
+linked against but older versions might work just as well):
  - Boost unit testing framework 1.68.0
  - Boost date time 1.68.0
  - libcurl 7.62.0
@@ -43,14 +47,35 @@ make
 
 ### Running
 After building, the software can be run with
-
 ```
-./src/info-tv --calendar_id <id> --api_key <key>
+./src/info-tv [ options ]
 ```
+Options allow connecting to multiple event sources.
 
-Where the `<id>` is the id of the Google Calendar from where the
-events are to be pulled from and `<key>` is the API key for
-accessing the calendar. Please follow the tutorials provided by
-Google to get the id and API key.
+To add a Google Calendar backend the following option is used:
+```
+--google-api <id> <key> [ <cd> <ecd> ]
+```
+Set `<id>` to the id of the Google Calendar to use and `<key>`
+to the API key connected to that Calendar. Optionally `<cd>` and
+`<ecd>` can be provided to manually se the cooldown and error
+cooldown values.
 
-For more options and help use the `--help` option.
+To add a POP Calendar backend the following option is used:
+```
+--pop-api <url> [ <cd> <ecd> ]
+```
+Set `<url>` to the url provided by the TUT intra. Optionally `<cd>`
+and `<ecd>` can be provided to manually se the cooldown and error
+cooldown values.
+ 
+To display a graphics at the top of the status view provide the
+following:
+```
+--logo <path>
+```
+Set `<path>` to the relative (from the working directory) or
+absolute path to the text file containing the ascii image.
+For example `--logo ../media/logo.ascii`
+
+For the most recent options and help use the `--help` option.
