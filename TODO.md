@@ -10,5 +10,5 @@
    - [ ] Add logging
    - [ ] Event model's update should signal if there're new events since
          the last update
-   - [ ] Add a label to the events showing how far away are they
+   - [X] Add a label to the events showing how far away are they
          (in days or hours) or if they are happening at the moment
