@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # This script check if we're inside a git repo and outputs a
 # description of the current commit and the possible changes
