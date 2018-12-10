@@ -22,6 +22,12 @@ events::event::set_duration(const ptime& start, const ptime& end)
 }
 
 void
+events::event::set_id(const std::string& id)
+{
+	id_ = id;
+}
+
+void
 events::event::set_location(const std::wstring& location)
 {
 	location_ = location;
@@ -37,6 +43,12 @@ time_period
 events::event::duration() const
 {
 	return duration_;
+}
+
+std::string_view
+events::event::id() const
+{
+	return std::string_view{id_};
 }
 
 std::wstring_view
