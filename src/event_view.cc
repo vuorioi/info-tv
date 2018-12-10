@@ -51,6 +51,8 @@ events::event_view::draw(ui::win& win) const
 
 		if (start.date() == end.date())
 			date_time_ss << L"On "
+				     << start.date().day_of_week()
+				     << ' '
 				     << start.date().day()
 				     << L". of "
 				     << start.date().month()
@@ -74,6 +76,8 @@ events::event_view::draw(ui::win& win) const
 				     << end.time_of_day().minutes();
 		else
 			date_time_ss << L"From "
+				     << start.date().day_of_week()
+				     << ' '
 				     << start.date().day()
 				     << L". of "
 				     << start.date().month()
@@ -88,6 +92,8 @@ events::event_view::draw(ui::win& win) const
 				     << std::setfill(L'0')
 				     << start.time_of_day().minutes()
 				     << L" to "
+				     << end.date().day_of_week()
+				     << ' '
 				     << end.date().day()
 				     << L". of "
 				     << end.date().month()
