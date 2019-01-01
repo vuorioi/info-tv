@@ -2,6 +2,7 @@
 
 #include <list>
 #include <optional>
+#include <regex>
 
 #include "event.h"
 
@@ -21,6 +22,12 @@ namespace events {
  */
 class event_backend_interface {
 public:
+	/* lower_cooldown - instruct the backend to use a lower cooldown
+	 *
+	 * This function tells the backend to lower the value used as cooldown
+	 * value. This can be used to schedule a retry after an failed update.
+	 */
+	virtual void lower_cooldown() = 0;
 	/* update - try to get new events from the backend
 	 *
 	 * Returns an optional containing a list of the events provided by
@@ -28,12 +35,6 @@ public:
 	 * was successfull. Otherwise the optional is empty.
 	 */
 	virtual std::optional<std::list<event>> update() = 0;
-	/* lower_cooldown - instruct the backend to use a lower cooldown
-	 *
-	 * This function tells the backend to lower the value used as cooldown
-	 * value. This can be used to schedule a retry after an failed update.
-	 */
-	virtual void lower_cooldown() = 0;
 
 	/* ready - check if the backends cooldown is not active
 	 *
