@@ -144,9 +144,13 @@ events::event_view::draw(ui::win& win) const
 		else
 			name_ss << event.name();
 
+		if (event.hilight())
+			event_win.add_text(L"?!",
+					   ui::effect::reverse,
+					   ui::align::left);
+
 		event_win.add_text(name_ss.str(),
-				   ui::effect::bold,
-				   ui::align::left)
+				   ui::effect::bold)
 			 .newline();
 
 		if (not event.location().empty()) {
