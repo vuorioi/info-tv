@@ -14,6 +14,12 @@ events::event::event(const std::wstring& name,
 }
 
 void
+events::event::set_description(const std::wstring& description)
+{
+	description_ = description;
+}
+
+void
 events::event::set_duration(const ptime& start, const ptime& end)
 {
 	if (start > end)
@@ -44,6 +50,12 @@ void
 events::event::set_name(const std::wstring& name)
 {
 	name_ = name;
+}
+
+std::wstring_view
+events::event::description() const
+{
+	return std::wstring_view{description_};
 }
 
 time_period

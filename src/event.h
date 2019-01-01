@@ -30,6 +30,12 @@ public:
 	/* ~event - explicitly defaulted dtor */
 	~event() = default;
 
+	/*set_description - set the event description
+	 * @description: event description
+	 *
+	 * Sets the event description used for highlighting.
+	 */
+	void set_description(const std::wstring& description);
 	/* set_duration - set the event duration
 	 * @start: boost::posix_time::ptime representation of the start time
 	 * @end: boost::posix_time::ptime representation of the end time
@@ -63,6 +69,11 @@ public:
 	 */
 	void set_name(const std::wstring& name);
 
+	/* description - get the event description
+	 *
+	 * Returns the event description.
+	 */
+	std::wstring_view description() const;
 	/* duration -  get the event duration
 	 *
 	 * Returns a boost::posix_time::time_period object representing the span
@@ -91,6 +102,7 @@ public:
 	std::wstring_view name() const;
 
 protected:
+	std::wstring description_;
 	time_period duration_;
 	bool hilight_;
 	std::string id_;
