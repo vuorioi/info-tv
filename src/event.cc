@@ -6,6 +6,7 @@ events::event::event(const std::wstring& name,
 		     const ptime& start_time,
 		     const ptime& end_time) :
 	duration_{start_time, end_time},
+	hilight_{false},
 	name_{name}
 {
 	if (start_time > end_time)
@@ -19,6 +20,12 @@ events::event::set_duration(const ptime& start, const ptime& end)
 		throw std::logic_error{"start time has to be before end"};
 
 	duration_ = time_period{start, end};
+}
+
+void
+events::event::set_hilight(const bool hilight)
+{
+	hilight_ = hilight;
 }
 
 void
@@ -43,6 +50,12 @@ time_period
 events::event::duration() const
 {
 	return duration_;
+}
+
+bool
+events::event::hilight() const
+{
+	return hilight_;
 }
 
 std::string_view

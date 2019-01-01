@@ -38,6 +38,12 @@ public:
 	 * start > end
 	 */
 	void set_duration(const ptime& start, const ptime& end);
+	/* set_hilight - change event highlighting
+	 * @hilight: event highlighting status
+	 *
+	 * Sets the event's highlighting status accordingly
+	 */
+	void set_hilight(const bool hilight);
 	/* set_id - set event id
 	 * @id: event id
 	 *
@@ -63,6 +69,11 @@ public:
 	 * of this event
 	 */
 	time_period duration() const;
+	/* hilight - check if the event is highlighted
+	 *
+	 * Returns true if event is highlighted
+	 */
+	bool hilight() const;
 	/* id - get the event id
 	 *
 	 * Returns a string view of the event id
@@ -81,6 +92,7 @@ public:
 
 protected:
 	time_period duration_;
+	bool hilight_;
 	std::string id_;
 	std::wstring location_;
 	std::wstring name_;
