@@ -10,9 +10,22 @@
 using boost::posix_time::second_clock;
 
 static bool add_events(std::list<events::event>& dst,
-		       const std::list<events::event>& src);
+		       const std::list<events::event>& src,
+		       const std::vector<std::basic_regex<wchar_t>>& regexes);
 static void combine_with(events::event& lhs, const events::event& rhs);
 static void update_to(events::event& lhs, const events::event& rhs);
+
+void
+events::event_model::add_hilight(unsigned source)
+{
+	source_hilights_.insert(source);
+}
+
+void
+events::event_model::add_hilight(std::basic_regex<wchar_t> rule)
+{
+	regex_hilights_.emplace_back(std::move(rule));
+}
 
 void
 events::event_model::add_source(std::shared_ptr<event_backend_interface> source)
@@ -53,8 +66,16 @@ events::event_model::events() const
 {
 	std::list<event> events;
 
-	for (auto& [source, source_events] : event_sources_)
-		add_events(events, source_events);
+	unsigned i = 0;
+	for (auto& [source, source_events] : event_sources_) {
+		if (source_hilights_.find(i) != source_hilights_.end())
+			for (auto& event : source_events)
+				event.set_hilight(true);
+
+		add_events(events, source_events, regex_hilights_);
+
+		i++;
+	}
 
 	return events;
 }
@@ -106,11 +127,18 @@ private:
 /* add_events - add new events
  * @dst: destination list
  * @src: source list
+ * @regexes: a vector of regexes for event highlighting
  *
  * Returns true if new events where added otherwise false.
+ *
+ * This function adds new events from src to dst list and combines duplicate
+ * events. Events that match the any one of the regexes from the vector are
+ * hilighted.
  */
 static bool
-add_events(std::list<events::event>& dst, const std::list<events::event>& src)
+add_events(std::list<events::event>& dst,
+	   const std::list<events::event>& src,
+	   const std::vector<std::basic_regex<wchar_t>>& regexes)
 {
 	bool new_events = false;
 
@@ -128,6 +156,12 @@ add_events(std::list<events::event>& dst, const std::list<events::event>& src)
 		if (cmp.was_equal()) {
 			combine_with(*it, new_event);
 		} else {
+			 for (auto& regex : regexes)
+			 	if (std::regex_search(std::wstring(new_event.name().data()), regex) or
+			 	    std::regex_search(std::wstring(new_event.description().data()), regex) or
+				    std::regex_search(new_event.location().data(), regex))
+			 		new_event.set_hilight(true);
+
 			dst.insert(it, std::move(new_event));
 			new_events = true;
 		}
@@ -150,6 +184,10 @@ combine_with(events::event& lhs, const events::event& rhs)
 
 	if (lhs.location().length() < rhs.location().length())
 		lhs.set_location(rhs.location().data());
+
+	// If either one of the events is highlighted the combined event will
+	// be highlighted
+	lhs.set_hilight(lhs.hilight() or rhs.hilight());
 
 	auto duration = lhs.duration().span(rhs.duration());
 	auto start = duration.begin();
