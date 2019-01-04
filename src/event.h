@@ -9,6 +9,10 @@ using boost::posix_time::ptime;
 using boost::posix_time::time_period;
 
 namespace events {
+/* search_target - which parts of the event can be searched when highlighting */
+enum search_target {name = 0x1,
+		    description = 0x2,
+		    location = 0x4};
 /* event class
  * This class represents an event instance
  */
