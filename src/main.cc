@@ -10,6 +10,7 @@
 #include <utility>
 #include <vector>
 
+#include "event.h"
 #include "event_backend_interface.h"
 #include "event_model.h"
 #include "event_view.h"
@@ -167,12 +168,12 @@ int main(int argc, const char** argv)
 				}
 
 				calendar_model.add_hilight(index);
-			} else if (values.size() == 2) {
+			} else if (values.size() == 3) {
 				if (values[0] == "search") {
 					std::basic_regex<wchar_t> r;
 
 					std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-					std::wstring regex_expr = converter.from_bytes(values[1]);
+					std::wstring regex_expr = converter.from_bytes(values[2]);
 
 					try {
 						r = std::basic_regex<wchar_t>(regex_expr,
@@ -183,12 +184,33 @@ int main(int argc, const char** argv)
 						std::cout << "Regex parsing failed! "
 							  << e.what()
 							  << " For: "
-							  << values[1]
+							  << values[2]
 							  << "\n\n";
 						print_help(argv[0]);
 						return -1;
 					}
-					calendar_model.add_hilight(std::move(r));
+
+					unsigned target = 0;
+
+					if (values[1] == "name") {
+						target |= events::search_target::name;
+					} else if (values[1] == "description") {
+						target |= events::search_target::description;
+					} else if (values[1] == "location") {
+						target |= events::search_target::location;
+					} else if (values[1] == "all") {
+						target |= events::search_target::name |
+							  events::search_target::description |
+							  events::search_target::location;
+					} else {
+						std::cout << "Unknown target for --hilight search: "
+							  << values[1]
+							  << "!\n\n";
+						print_help(argv[0]);
+						return -1;
+					}
+
+					calendar_model.add_hilight(std::move(r), static_cast<events::search_target>(target));
 				} else {
 					std::cout << "Unknown argument for --hilight: "
 						  << values[0]
@@ -287,10 +309,11 @@ static void print_help(const char* name)
 		  << "                         key <key>. <cd> is the cooldown period in seconds\n"
 		  << "                         and <ecd> is the cooldown period used if the connection\n"
 		  << "                         to server failed.\n"
-		  << "  --hilight [ <source> | search <regex> ]\n"
+		  << "  --hilight [ <source> | search <target> <regex> ]\n"
 		  << "                         Highlight events that are either from the source number\n"
 		  << "                         <source> (indexing starts from 0) or that match the\n"
-		  << "                         <regex> in their title, description or location.\n"
+		  << "                         <regex> in <target>. <target> can be any one of these:\n"
+		  << "                         'name', 'description', 'location' or 'all'.\n"
 		  << "  --logo <path>          Path to a text file containing the ascii graphic logo\n"
 		  << "                         to display at the top of the screen.\n";
 }
