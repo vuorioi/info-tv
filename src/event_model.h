@@ -30,12 +30,12 @@ public:
 	void add_hilight(unsigned source);
 	/* add_hilight - add a rule for hilighting events
 	 * @rule: regex used for finding the events to highlight
+	 * @target: the part of the event this rule will target
 	 *
-	 * This overload adds a regex rule that is used to match every event's
-	 * name and description. If either one can be matched the event is
-	 * highlighted.
+	 * This overload adds a regex rule that is used to match every event.
 	 */
-	void add_hilight(std::basic_regex<wchar_t> rule);
+	void add_hilight(std::basic_regex<wchar_t> rule,
+			 events::search_target target);
 	/* add_source - add an event source to this model
 	 * @source: shared pointer to the event backend
 	 *
@@ -60,7 +60,8 @@ public:
 protected:
 	mutable std::list<std::pair<std::shared_ptr<event_backend_interface>,
 			  std::list<event>>> event_sources_;
-	std::vector<std::basic_regex<wchar_t>> regex_hilights_;
-	std::unordered_set<unsigned> source_hilights_;
+	std::vector<std::pair<events::search_target,
+			      std::basic_regex<wchar_t>>> regex_rules_;
+	std::unordered_set<unsigned> source_rules_;
 };
 }

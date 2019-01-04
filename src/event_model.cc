@@ -11,20 +11,22 @@ using boost::posix_time::second_clock;
 
 static bool add_events(std::list<events::event>& dst,
 		       const std::list<events::event>& src,
-		       const std::vector<std::basic_regex<wchar_t>>& regexes);
+	   	       const std::vector<std::pair<events::search_target, std::basic_regex<wchar_t>>>& rules);
+static bool do_regex_search(const std::pair<events::search_target, std::basic_regex<wchar_t>>& rule,
+			    const events::event& event);
 static void combine_with(events::event& lhs, const events::event& rhs);
-static void update_to(events::event& lhs, const events::event& rhs);
 
 void
 events::event_model::add_hilight(unsigned source)
 {
-	source_hilights_.insert(source);
+	source_rules_.insert(source);
 }
 
 void
-events::event_model::add_hilight(std::basic_regex<wchar_t> rule)
+events::event_model::add_hilight(std::basic_regex<wchar_t> rule,
+				 const events::search_target target)
 {
-	regex_hilights_.emplace_back(std::move(rule));
+	regex_rules_.emplace_back(std::make_pair(target, std::move(rule)));
 }
 
 void
@@ -68,11 +70,11 @@ events::event_model::events() const
 
 	unsigned i = 0;
 	for (auto& [source, source_events] : event_sources_) {
-		if (source_hilights_.find(i) != source_hilights_.end())
+		if (source_rules_.find(i) != source_rules_.end())
 			for (auto& event : source_events)
 				event.set_hilight(true);
 
-		add_events(events, source_events, regex_hilights_);
+		add_events(events, source_events, regex_rules_);
 
 		i++;
 	}
@@ -138,7 +140,7 @@ private:
 static bool
 add_events(std::list<events::event>& dst,
 	   const std::list<events::event>& src,
-	   const std::vector<std::basic_regex<wchar_t>>& regexes)
+	   const std::vector<std::pair<events::search_target, std::basic_regex<wchar_t>>>& rules)
 {
 	bool new_events = false;
 
@@ -156,11 +158,9 @@ add_events(std::list<events::event>& dst,
 		if (cmp.was_equal()) {
 			combine_with(*it, new_event);
 		} else {
-			 for (auto& regex : regexes)
-			 	if (std::regex_search(std::wstring(new_event.name().data()), regex) or
-			 	    std::regex_search(std::wstring(new_event.description().data()), regex) or
-				    std::regex_search(new_event.location().data(), regex))
-			 		new_event.set_hilight(true);
+
+			for (auto& rule : rules)
+				new_event.set_hilight(do_regex_search(rule, new_event));
 
 			dst.insert(it, std::move(new_event));
 			new_events = true;
@@ -168,6 +168,33 @@ add_events(std::list<events::event>& dst,
 	}
 
 	return new_events;
+}
+
+/* do_regex_search - use the regex rule to search the event for keywords
+ * @rule: pair of regex object and a target specifing which source to use
+ * @event: the event to search
+ *
+ * Returns true if the rule matches this event, otherwise false is returned.
+ */
+static bool
+do_regex_search(const std::pair<events::search_target, std::basic_regex<wchar_t>>& rule,
+		const events::event& event)
+{
+	bool found = false;
+
+	if (rule.first & events::search_target::name) {
+		found |= std::regex_search(event.name().data(), rule.second);
+	}
+
+	if (rule.first & events::search_target::description) {
+		found |= std::regex_search(event.description().data(), rule.second);
+	}
+	
+	if (rule.first & events::search_target::location) {
+		found |= std::regex_search(event.location().data(), rule.second);
+	}
+
+	return found;
 }
 
 /* combine_with - combine contained event with another
