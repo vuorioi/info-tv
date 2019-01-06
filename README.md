@@ -78,4 +78,24 @@ Set `<path>` to the relative (from the working directory) or
 absolute path to the text file containing the ascii image.
 For example `--logo ../media/logo.ascii`
 
+To highlight events the `highlight` optiona can be used in two ways:
+```
+--hilight <event_source>
+```
+Where event source is the number of the source (indexing starts from
+0) of the events. This will highlight all events from the specified
+source.
+
+```
+--hilight search <target> <regex>
+```
+This option will search using the inputed regex from any one of the
+following targets: 'name', 'description', 'location' or 'all'.
+Regex uses the modified ECMAScript regular expression grammar (for
+more info please see the C++ standard etc.). Do note that backslashes
+have to be escaped. E.g. to use the following regular expression
+`\b\w{4}\s\w+` (search for two words [the first word is exactly four
+characters long] separated by a whitespace) it should be transformed
+to `\\b\\w{4}\\s\\w+`.
+
 For the most recent options and help use the `--help` option.

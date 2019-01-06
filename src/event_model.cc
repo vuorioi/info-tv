@@ -10,9 +10,24 @@
 using boost::posix_time::second_clock;
 
 static bool add_events(std::list<events::event>& dst,
-		       const std::list<events::event>& src);
+		       const std::list<events::event>& src,
+	   	       const std::vector<std::pair<events::search_target, std::basic_regex<wchar_t>>>& rules);
+static bool do_regex_search(const std::pair<events::search_target, std::basic_regex<wchar_t>>& rule,
+			    const events::event& event);
 static void combine_with(events::event& lhs, const events::event& rhs);
-static void update_to(events::event& lhs, const events::event& rhs);
+
+void
+events::event_model::add_hilight(unsigned source)
+{
+	source_rules_.insert(source);
+}
+
+void
+events::event_model::add_hilight(std::basic_regex<wchar_t> rule,
+				 const events::search_target target)
+{
+	regex_rules_.emplace_back(std::pair(target, std::move(rule)));
+}
 
 void
 events::event_model::add_source(std::shared_ptr<event_backend_interface> source)
@@ -36,13 +51,27 @@ events::event_model::update()
 				source->lower_cooldown();
 				continue;
 			}
-		} else {
-			source_events.remove_if([](const events::event& e) {
-				return e.duration().end() <
-				       second_clock::local_time();
-			});
 		}
+	}
 
+	// If any of the sources provided updates we need to rebuild our local
+	// events list. Otherwise we can just remove passed events
+	if (new_events) {
+		unsigned i = 0;
+		for (auto& [source, source_events] : event_sources_) {
+			if (source_rules_.find(i) != source_rules_.end())
+				for (auto& event : source_events)
+					event.set_hilight(true);
+
+			add_events(events_, source_events, regex_rules_);
+
+			i++;
+		}
+	} else {
+		events_.remove_if([](const events::event& e) {
+			return e.duration().end() <
+			       second_clock::local_time();
+		});
 	}
 
 	return new_events;
@@ -51,12 +80,7 @@ events::event_model::update()
 std::list<events::event>
 events::event_model::events() const
 {
-	std::list<event> events;
-
-	for (auto& [source, source_events] : event_sources_)
-		add_events(events, source_events);
-
-	return events;
+	return events_;
 }
 
 /* event_comparison structure
@@ -106,11 +130,18 @@ private:
 /* add_events - add new events
  * @dst: destination list
  * @src: source list
+ * @regexes: a vector of regexes for event highlighting
  *
  * Returns true if new events where added otherwise false.
+ *
+ * This function adds new events from src to dst list and combines duplicate
+ * events. Events that match the any one of the regexes from the vector are
+ * hilighted.
  */
 static bool
-add_events(std::list<events::event>& dst, const std::list<events::event>& src)
+add_events(std::list<events::event>& dst,
+	   const std::list<events::event>& src,
+	   const std::vector<std::pair<events::search_target, std::basic_regex<wchar_t>>>& rules)
 {
 	bool new_events = false;
 
@@ -122,18 +153,50 @@ add_events(std::list<events::event>& dst, const std::list<events::event>& src)
 		auto it = find_if(dst.begin(), dst.end(), std::ref(cmp));
 
 		// If the event was equal to an existing event we can skip it
-		// otherwise it is added before the first event that starts afte
+		// otherwise it is added before the first event that starts after
 		// it. If no existing event start after this event then it is
 		// inserted to the end of the list
 		if (cmp.was_equal()) {
 			combine_with(*it, new_event);
 		} else {
+
+			for (auto& rule : rules)
+				if (not new_event.hilight())
+					new_event.set_hilight(do_regex_search(rule, new_event));
+
 			dst.insert(it, std::move(new_event));
 			new_events = true;
 		}
 	}
 
 	return new_events;
+}
+
+/* do_regex_search - use the regex rule to search the event for keywords
+ * @rule: pair of regex object and a target specifing which source to use
+ * @event: the event to search
+ *
+ * Returns true if the rule matches this event, otherwise false is returned.
+ */
+static bool
+do_regex_search(const std::pair<events::search_target, std::basic_regex<wchar_t>>& rule,
+		const events::event& event)
+{
+	bool found = false;
+
+	if (rule.first & events::search_target::name) {
+		found |= std::regex_search(event.name().data(), rule.second);
+	}
+
+	if (rule.first & events::search_target::description) {
+		found |= std::regex_search(event.description().data(), rule.second);
+	}
+	
+	if (rule.first & events::search_target::location) {
+		found |= std::regex_search(event.location().data(), rule.second);
+	}
+
+	return found;
 }
 
 /* combine_with - combine contained event with another
@@ -150,6 +213,10 @@ combine_with(events::event& lhs, const events::event& rhs)
 
 	if (lhs.location().length() < rhs.location().length())
 		lhs.set_location(rhs.location().data());
+
+	// If either one of the events is highlighted the combined event will
+	// be highlighted
+	lhs.set_hilight(lhs.hilight() or rhs.hilight());
 
 	auto duration = lhs.duration().span(rhs.duration());
 	auto start = duration.begin();

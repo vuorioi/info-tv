@@ -1,6 +1,18 @@
 #include "event_view.h"
 
+#include <chrono>
+
 using boost::posix_time::second_clock;
+
+/* flash_freq - flash the highlighted text at 0.5 Hz */
+constexpr float flash_freq = .5;
+
+/* flash hilight - sw flashing timer for event highlighting
+ * @freq: flashing frequency
+ *
+ * Returns true and false periodically depending on the used frequency
+ */
+static bool flash_hilight(float freq);
 
 void
 events::event_view::set_model(event_model* model)
@@ -144,10 +156,17 @@ events::event_view::draw(ui::win& win) const
 		else
 			name_ss << event.name();
 
-		event_win.add_text(name_ss.str(),
-				   ui::effect::bold,
-				   ui::align::left)
-			 .newline();
+		if (event.hilight()) {
+			event_win.add_text(name_ss.str(),
+					   flash_hilight(flash_freq) ?
+					   ui::effect::reverse | ui::effect::bold :
+					   ui::effect::bold)
+				 .newline();
+		} else {
+			event_win.add_text(name_ss.str(),
+					   ui::effect::bold)
+				 .newline();
+		}
 
 		if (not event.location().empty()) {
 			 event_win.add_text(event.location().data(),
@@ -174,4 +193,23 @@ unsigned
 events::event_view::height() const
 {
 	return 0;
+}
+
+static bool flash_hilight(float freq)
+{
+	static bool use_bold = true;
+	static std::chrono::time_point<std::chrono::steady_clock> last_change;
+
+	if (freq < 0)
+		throw std::invalid_argument{"frequency cannot be negative"};
+
+	auto now = std::chrono::steady_clock::now();
+
+	if (now - last_change >=
+	    std::chrono::milliseconds(static_cast<unsigned>(1000/(2*freq)))) {
+		use_bold = !use_bold;
+		last_change = now;
+	}
+
+	return use_bold;
 }

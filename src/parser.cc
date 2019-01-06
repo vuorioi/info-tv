@@ -58,16 +58,21 @@ events::parser::events_from_ics(const std::string& ics_str)
 		if (from_iso_string(event["DTEND;TZID=Europe/Helsinki"]) < second_clock::local_time())
 			continue;
 
-		event_list.emplace_back(events::event{converter.from_bytes(event["SUMMARY"].c_str()),
+		const std::string name = event["SUMMARY"];
+		event_list.emplace_back(events::event{converter.from_bytes(name.c_str()),
 					from_iso_string(event["DTSTART;TZID=Europe/Helsinki"]),
 					from_iso_string(event["DTEND;TZID=Europe/Helsinki"])});
 		const std::string location = event["LOCATION"];
 		const std::string id = event["UID"];
-
+		const std::wstring description = converter.from_bytes(event["DESCRIPTION"].c_str());
+		
 		if (not location.empty())
 			event_list.back().set_location(converter.from_bytes(location.c_str()));
 		if (not id.empty())
 			event_list.back().set_id(id);
+
+		if (not description.empty())
+			event_list.back().set_description(description);
 	}
 
 	return event_list;
@@ -104,6 +109,7 @@ events::parser::events_from_json(const std::string& json_str)
 			std::string name;
 			std::string location;
 			std::string id;
+			std::wstring description;
 			ptime start;
 			ptime end;
 
@@ -132,6 +138,10 @@ events::parser::events_from_json(const std::string& json_str)
 				iter = event.find("iCalUID");
 				if (iter != event.end())
 					id = *iter;
+
+				iter = event.find("description");
+				if (iter != event.end())
+					description = converter.from_bytes((*iter).get<std::string>().c_str());
 
 				iter = event.find("start");
 				if (iter == event.end())
@@ -184,6 +194,9 @@ events::parser::events_from_json(const std::string& json_str)
 					event_list.back().set_location(converter.from_bytes(location.c_str()));
 				if (not id.empty())
 					event_list.back().set_id(id);
+
+				if (not description.empty())
+					event_list.back().set_description(description);
 			} else {
 				throw std::runtime_error{"event key \"status\" has an unkown value"};
 			}

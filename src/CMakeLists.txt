@@ -33,13 +33,22 @@ target_link_libraries(Event
 	${Boost_DATE_TIME_LIBRARY})
 
 add_library(Status
-	status_view.cc)
+	status_view.cc
+	version.cc)
 target_link_libraries(Status
 	Ui)
 
-add_executable(info-tv main.cc)
+add_executable(info-tv
+	main.cc
+	version.cc)
 target_link_libraries(info-tv
 	Event
 	Status
 	Ui
 	Utility)
+
+install(TARGETS info-tv
+	RUNTIME DESTINATION bin)
+
+install(DIRECTORY ${InfoTV_SOURCE_DIR}/media
+	DESTINATION share/info-tv/)

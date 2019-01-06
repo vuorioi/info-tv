@@ -1,13 +1,16 @@
 #include <chrono>
 #include <clocale>
+#include <codecvt>
 #include <csignal>
 #include <list>
+#include <regex>
 #include <thread>
 #include <tuple>
 #include <memory>
 #include <utility>
 #include <vector>
 
+#include "event.h"
 #include "event_backend_interface.h"
 #include "event_model.h"
 #include "event_view.h"
@@ -19,7 +22,7 @@
 #include "utility.h"
 #include "view_interface.h"
 
-constexpr char version[] = "1.1";
+extern char version[];
 
 static bool quit = false;
 
@@ -64,7 +67,7 @@ int main(int argc, const char** argv)
 	events::event_model calendar_model;
 	std::list<std::shared_ptr<events::event_backend_interface>> backends;
 
-	for (auto [name, values] : params) {
+	for (const auto [name, values] : params) {
 		if (name == "help") {
 			print_help(argv[0]);
 			return 0;
@@ -141,6 +144,84 @@ int main(int argc, const char** argv)
 				print_help(argv[0]);
 				return -1;
 			}
+		} else if (name == "hilight") {
+			if (values.size() == 1) {
+				int index;
+
+				try {
+					index = std::stoi(values[0]);
+				} catch (const std::exception& e) {
+					std::cout << "Invalid argument for --hilight: "
+						  << values[0]
+						  << "\n\n";
+					print_help(argv[0]);
+					return -1;
+				}
+
+				if (index < 0) {
+					std::cout << "Invalid argument for --hilight: "
+						  << values[0]
+						  << "\n\n";
+					print_help(argv[0]);
+					return -1;
+				}
+
+				calendar_model.add_hilight(index);
+			} else if (values.size() == 3) {
+				if (values[0] == "search") {
+					std::basic_regex<wchar_t> r;
+
+					std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+					std::wstring regex_expr = converter.from_bytes(values[2]);
+
+					try {
+						r = std::basic_regex<wchar_t>(regex_expr,
+									      //std::regex_constants::egrep |
+									      std::regex_constants::icase |
+									      std::regex_constants::optimize);
+					} catch (const std::regex_error& e) {
+						std::cout << "Regex parsing failed! "
+							  << e.what()
+							  << " For: "
+							  << values[2]
+							  << "\n\n";
+						print_help(argv[0]);
+						return -1;
+					}
+
+					unsigned target = 0;
+
+					if (values[1] == "name") {
+						target |= events::search_target::name;
+					} else if (values[1] == "description") {
+						target |= events::search_target::description;
+					} else if (values[1] == "location") {
+						target |= events::search_target::location;
+					} else if (values[1] == "all") {
+						target |= events::search_target::name |
+							  events::search_target::description |
+							  events::search_target::location;
+					} else {
+						std::cout << "Unknown target for --hilight search: "
+							  << values[1]
+							  << "!\n\n";
+						print_help(argv[0]);
+						return -1;
+					}
+
+					calendar_model.add_hilight(std::move(r), static_cast<events::search_target>(target));
+				} else {
+					std::cout << "Unknown argument for --hilight: "
+						  << values[0]
+						  << "\n\n";
+					print_help(argv[0]);
+					return -1;
+				}
+			} else {
+				std::cout << "Wrong amount of arguments for --highlight\n\n";
+				print_help(argv[0]);
+				return -1;
+			}
 		} else {
 			std::cout << "Unknown option '"
 				  << name
@@ -167,7 +248,7 @@ int main(int argc, const char** argv)
 
 		bool new_events = calendar_model.update();
 		if (new_events)
-			set_system_message(status, L"New events!", 60s);
+			set_system_message(status, L"Events updated!", 60s);
 
 		status.set_system_time(second_clock::local_time());
 		refresh_system_message(status);
@@ -227,6 +308,11 @@ static void print_help(const char* name)
 		  << "                         key <key>. <cd> is the cooldown period in seconds\n"
 		  << "                         and <ecd> is the cooldown period used if the connection\n"
 		  << "                         to server failed.\n"
+		  << "  --hilight [ <source> | search <target> <regex> ]\n"
+		  << "                         Highlight events that are either from the source number\n"
+		  << "                         <source> (indexing starts from 0) or that match the\n"
+		  << "                         <regex> in <target>. <target> can be any one of these:\n"
+		  << "                         'name', 'description', 'location' or 'all'.\n"
 		  << "  --logo <path>          Path to a text file containing the ascii graphic logo\n"
 		  << "                         to display at the top of the screen.\n";
 }

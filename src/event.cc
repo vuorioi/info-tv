@@ -6,10 +6,17 @@ events::event::event(const std::wstring& name,
 		     const ptime& start_time,
 		     const ptime& end_time) :
 	duration_{start_time, end_time},
+	hilight_{false},
 	name_{name}
 {
 	if (start_time > end_time)
 		throw std::logic_error{"start time has to be before end"};
+}
+
+void
+events::event::set_description(const std::wstring& description)
+{
+	description_ = description;
 }
 
 void
@@ -19,6 +26,12 @@ events::event::set_duration(const ptime& start, const ptime& end)
 		throw std::logic_error{"start time has to be before end"};
 
 	duration_ = time_period{start, end};
+}
+
+void
+events::event::set_hilight(const bool hilight)
+{
+	hilight_ = hilight;
 }
 
 void
@@ -39,10 +52,22 @@ events::event::set_name(const std::wstring& name)
 	name_ = name;
 }
 
+std::wstring_view
+events::event::description() const
+{
+	return std::wstring_view{description_};
+}
+
 time_period
 events::event::duration() const
 {
 	return duration_;
+}
+
+bool
+events::event::hilight() const
+{
+	return hilight_;
 }
 
 std::string_view
