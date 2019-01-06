@@ -4,7 +4,7 @@
 #include <iomanip>
 #include <sstream>
 
-#include "git_commit_rev.h"
+extern const wchar_t version_w[];
 
 util::status_view::status_view() :
 	logo_{nullptr}
@@ -73,8 +73,7 @@ util::status_view::draw(ui::win& win) const
 		<< system_time_.date().year();
 
 	std::wstringstream version_ss;
-	version_ss << "built from "
-		   << git_commit_rev;
+	version_ss << version_w;
 
 	status_win.add_text(date_ss.str(),
 			    ui::effect::bold)
