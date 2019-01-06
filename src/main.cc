@@ -137,7 +137,9 @@ int main(int argc, const char** argv)
 				return -1;
 			}
 		} else if (name == "logo") {
-			if (values.size() == 1) {
+			if (values.size() == 0) {
+				status.set_logo("/usr/local/share/info-tv/logo.ascii");
+			} else if (values.size() == 1) {
 				status.set_logo(values[0]);
 			} else {
 				std::cout << "Wrong amount of arguments for --logo\n\n";
@@ -308,7 +310,7 @@ static void print_help(const char* name)
 		  << "                         key <key>. <cd> is the cooldown period in seconds\n"
 		  << "                         and <ecd> is the cooldown period used if the connection\n"
 		  << "                         to server failed.\n"
-		  << "  --hilight [ <source> | search <target> <regex> ]\n"
+		  << "  --hilight <source> | search <target> <regex>\n"
 		  << "                         Highlight events that are either from the source number\n"
 		  << "                         <source> (indexing starts from 0) or that match the\n"
 		  << "                         <regex> in <target>. <target> can be any one of these:\n"
