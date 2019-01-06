@@ -26,7 +26,7 @@ void
 events::event_model::add_hilight(std::basic_regex<wchar_t> rule,
 				 const events::search_target target)
 {
-	regex_rules_.emplace_back(std::make_pair(target, std::move(rule)));
+	regex_rules_.emplace_back(std::pair(target, std::move(rule)));
 }
 
 void
@@ -51,13 +51,27 @@ events::event_model::update()
 				source->lower_cooldown();
 				continue;
 			}
-		} else {
-			source_events.remove_if([](const events::event& e) {
-				return e.duration().end() <
-				       second_clock::local_time();
-			});
 		}
+	}
 
+	// If any of the sources provided updates we need to rebuild our local
+	// events list. Otherwise we can just remove passed events
+	if (new_events) {
+		unsigned i = 0;
+		for (auto& [source, source_events] : event_sources_) {
+			if (source_rules_.find(i) != source_rules_.end())
+				for (auto& event : source_events)
+					event.set_hilight(true);
+
+			add_events(events_, source_events, regex_rules_);
+
+			i++;
+		}
+	} else {
+		events_.remove_if([](const events::event& e) {
+			return e.duration().end() <
+			       second_clock::local_time();
+		});
 	}
 
 	return new_events;
@@ -66,20 +80,7 @@ events::event_model::update()
 std::list<events::event>
 events::event_model::events() const
 {
-	std::list<event> events;
-
-	unsigned i = 0;
-	for (auto& [source, source_events] : event_sources_) {
-		if (source_rules_.find(i) != source_rules_.end())
-			for (auto& event : source_events)
-				event.set_hilight(true);
-
-		add_events(events, source_events, regex_rules_);
-
-		i++;
-	}
-
-	return events;
+	return events_;
 }
 
 /* event_comparison structure
@@ -152,7 +153,7 @@ add_events(std::list<events::event>& dst,
 		auto it = find_if(dst.begin(), dst.end(), std::ref(cmp));
 
 		// If the event was equal to an existing event we can skip it
-		// otherwise it is added before the first event that starts afte
+		// otherwise it is added before the first event that starts after
 		// it. If no existing event start after this event then it is
 		// inserted to the end of the list
 		if (cmp.was_equal()) {
@@ -160,7 +161,8 @@ add_events(std::list<events::event>& dst,
 		} else {
 
 			for (auto& rule : rules)
-				new_event.set_hilight(do_regex_search(rule, new_event));
+				if (not new_event.hilight())
+					new_event.set_hilight(do_regex_search(rule, new_event));
 
 			dst.insert(it, std::move(new_event));
 			new_events = true;

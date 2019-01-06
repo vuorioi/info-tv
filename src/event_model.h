@@ -58,6 +58,7 @@ public:
 	std::list<event> events() const;
 	
 protected:
+	std::list<event> events_;
 	mutable std::list<std::pair<std::shared_ptr<event_backend_interface>,
 			  std::list<event>>> event_sources_;
 	std::vector<std::pair<events::search_target,
