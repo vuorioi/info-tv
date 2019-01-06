@@ -14,7 +14,6 @@
 #include "event_backend_interface.h"
 #include "event_model.h"
 #include "event_view.h"
-#include "git_commit_rev.h"
 #include "google_calendar_backend.h"
 #include "parser.h"
 #include "pop_calendar_backend.h"
@@ -23,7 +22,7 @@
 #include "utility.h"
 #include "view_interface.h"
 
-constexpr char version[] = "1.1";
+extern char version[];
 
 static bool quit = false;
 
@@ -177,7 +176,7 @@ int main(int argc, const char** argv)
 
 					try {
 						r = std::basic_regex<wchar_t>(regex_expr,
-									      std::regex_constants::extended |
+									      //std::regex_constants::egrep |
 									      std::regex_constants::icase |
 									      std::regex_constants::optimize);
 					} catch (const std::regex_error& e) {
@@ -249,7 +248,7 @@ int main(int argc, const char** argv)
 
 		bool new_events = calendar_model.update();
 		if (new_events)
-			set_system_message(status, L"New events!", 60s);
+			set_system_message(status, L"Events updated!", 60s);
 
 		status.set_system_time(second_clock::local_time());
 		refresh_system_message(status);
@@ -322,9 +321,7 @@ static void print_version()
 {
 	std::cout << "info-tv version "
 		  << version
-		  << " ("
-		  << git_commit_rev
-		  << ")\n";
+		  << '\n';
 }
 
 static void signal_handler(int signo)
