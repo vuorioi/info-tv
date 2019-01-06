@@ -23,4 +23,4 @@ else
 	commit_num="out of tree"
 fi
 
-echo "const wchar_t git_commit_rev[] = L\"$commit_num$clean\";" > $file
+echo "constexpr wchar_t git_commit_rev[] = L\"$commit_num$clean\";" > $file
