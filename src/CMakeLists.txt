@@ -50,5 +50,5 @@ target_link_libraries(info-tv
 install(TARGETS info-tv
 	RUNTIME DESTINATION bin)
 
-install(DIRECTORY ${InfoTV_SOURCE_DIR}/media
-	DESTINATION share/info-tv/)
+install(DIRECTORY ${InfoTV_SOURCE_DIR}/media/
+	DESTINATION share/info-tv)
