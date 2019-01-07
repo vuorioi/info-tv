@@ -1,20 +1,39 @@
 # Info TV
-This project implements an information TV display for a Raspberry
-Pi using a Google Calendar and TUT's POP Calendar as the information sources.
-Rendering is done (at the moment) with ncursesw and the connection to the
-APIs is handled with libcurl using the interfaces provided by TUT and Google.
+This project implements a commandline based information TV display
+for a Raspberry Pi. Both Google Calendar and iCalendar source can
+be used as the information sources. Rendering is done (at the moment)
+with ncursesw and connections to the remote services are handled with
+libcurl using the interfaces provided by TUT and Google.
 
-Google Calendar API provides the event information in a json format and this
-is parsed with the help of nlohmann's json library. TUT's Calendar is provided
-in iCalendar format and a purpose built parser is used for this. Boost libraries
+Google Calendar API provides the event information in a json format
+and this is parsed with the help of nlohmann's json library. iCalendar
+format is parsed using a a simple purpose built parser. Boost libraries
 are used for unit testing and date time utilites.
 
-The interfaces provided by the components are documented in the source files.
+The interfaces provided by the components are documented in the
+source files.
 
 ## Project structure
 The directory structure of this repo is the following
  - `media/` -- Media files
  - `src/` -- Source code
+   - `db_connection` -- Handles the connections to the remote services
+   - `event` -- Represents a single event
+   - `event_model` -- A model that manages the events in the system
+   - `view_interface` -- A commong interface for the view that are
+     shown to the user
+   - `event_view` -- A view for rendering events from the event model
+   - `status_view` -- A view for system information
+   - `event_backend_interface` -- A common interface for the event
+     sources
+   - `google_calendar_backend` -- Implementation of the event backend
+     interface for a Google calendar
+   - `pop_calendar_backend` -- Implementation of the event backend
+     interface for a POP calendar
+   - `icalendar` -- Very simple parser for the iCalendar format
+   - `parser` -- Event parsing functions
+   - `ui` -- Simple userinterface based on the ncursesw library
+   - `utility` -- Collection of utility functions
  - `test/` -- Unit test sources
  - `util/` -- Utility scripts
  - `CMakeLists.txt`
@@ -23,7 +42,7 @@ The directory structure of this repo is the following
  - `TODO.md` -- List of things to be done until the next release
 
 ## Dependencies
-This project uses c++17 features an as such a relatively recent
+This project uses c++17 features and as such a relatively recent
 compiler should be used. This project alse depends on the
 following libraries (versions are the ones I have successfully
 linked against but older versions might work just as well):
@@ -34,23 +53,26 @@ linked against but older versions might work just as well):
  - nlohmann/json 3.4.0
 
 ## How to build and use
-### Building
-After installing the required dependecies and cloning this repo
-the software can be build using the following commands:
+### Building and installing
+After installing the required dependencies and cloning this repo
+the software can be build and installed using the following
+commands:
 
 ```
 mkdir build
 cd build
 cmake ..
 make
+sudo make install
 ```
 
 ### Running
-After building, the software can be run with
+After building and installing, the software can be run with
 ```
-./src/info-tv [ options ]
+info-tv [ options | --help | --version ]
 ```
-Options allow connecting to multiple event sources.
+Options allow connecting to multiple event sources, event highlighting
+and more.
 
 To add a Google Calendar backend the following option is used:
 ```
@@ -70,15 +92,16 @@ and `<ecd>` can be provided to manually se the cooldown and error
 cooldown values.
  
 To display a graphics at the top of the status view provide the
-following:
+following option:
 ```
---logo <path>
+--logo [<path>]
 ```
-Set `<path>` to the relative (from the working directory) or
-absolute path to the text file containing the ascii image.
-For example `--logo ../media/logo.ascii`
+If `<path>` is not set, the default logo will be used. To use you own
+logo set `<path>` to the relative (from the working directory) or
+absolute path to the text file containing an ascii image. For example
+`--logo /path/to/your/logo.ascii`
 
-To highlight events the `highlight` optiona can be used in two ways:
+To highlight events the `--hilight` option can be used in two ways:
 ```
 --hilight <event_source>
 ```
@@ -89,13 +112,20 @@ source.
 ```
 --hilight search <target> <regex>
 ```
-This option will search using the inputed regex from any one of the
-following targets: 'name', 'description', 'location' or 'all'.
-Regex uses the modified ECMAScript regular expression grammar (for
-more info please see the C++ standard etc.). Do note that backslashes
-have to be escaped. E.g. to use the following regular expression
-`\b\w{4}\s\w+` (search for two words [the first word is exactly four
-characters long] separated by a whitespace) it should be transformed
-to `\\b\\w{4}\\s\\w+`.
+This option will search using the inputed `regex` from any one of the
+following targets:
+ - `name`: search the name of the event
+ - `description`: search the event description
+ - `location`: search the event location
+ - `all`: carry out the search on all of the targets
 
-For the most recent options and help use the `--help` option.
+Regex uses the modified ECMAScript regular expression grammar (for
+more info please see the C++ standard etc.).
+
+Do note that backslashes have to be escaped. E.g. to use the following
+regular expression `\b\w{4}\s\w+` (search for two words [the first
+word is exactly four characters long] separated by a whitespace) it
+should be transformed to `--hilight search <target> "\\b\\w{4}\\s\\w+"`.
+
+For the most recent options and help run the program using the `--help`
+option.
