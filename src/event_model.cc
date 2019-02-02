@@ -7,6 +7,8 @@
 
 #include <boost/date_time.hpp>
 
+#include "utility.h"
+
 using boost::posix_time::second_clock;
 
 static bool add_events(std::list<events::event>& dst,
@@ -100,12 +102,13 @@ struct event_comparison {
 	 * Returns true if the events are (probably) the same or
 	 * if the rhs event starts after the lhs event.
 	 *
-	 * Events are considered to be the same if their names match.
+	 * Events are considered to be the same if their names are similar
+	 * and their durations intersect.
 	 */
 	bool
 	operator()(const events::event& rhs)
 	{
-		if (lhs_.name() == rhs.name() and
+		if (util::similar_str(lhs_.name(), rhs.name()) and
 		    lhs_.duration().intersects(rhs.duration())) {
 			is_same_ = true;
 			return true;
@@ -135,7 +138,7 @@ private:
  * Returns true if new events where added otherwise false.
  *
  * This function adds new events from src to dst list and combines duplicate
- * events. Events that match the any one of the regexes from the vector are
+ * events. Events that match any one of the regexes from the vector are
  * hilighted.
  */
 static bool
