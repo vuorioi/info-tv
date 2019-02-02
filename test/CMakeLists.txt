@@ -30,7 +30,7 @@ target_link_libraries(google_calendar_backend_test
 	Event
 	${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
-add_executable(pop_calendar_backend_test pop_calendar_backend_test.cc)
-target_link_libraries(pop_calendar_backend_test
+add_executable(ical_backend_test ical_backend_test.cc)
+target_link_libraries(ical_backend_test
 	Event
 	${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})

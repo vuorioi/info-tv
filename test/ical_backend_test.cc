@@ -1,10 +1,10 @@
 #define BOOST_TEST_MODULE pop calendar backend test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <chrono>
 #include <thread>
 
-#include "pop_calendar_backend.h"
+#include "ical_backend.h"
 
 using namespace boost::gregorian;
 using namespace boost::posix_time;
