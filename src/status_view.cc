@@ -56,31 +56,30 @@ util::status_view::draw(ui::win& win) const
 					   ui::align::center);
 
 	// Print date and time
-	std::wstringstream time_ss;
-	time_ss << std::setw(2)
-		<< std::setfill(L'0')
-		<< system_time_.time_of_day().hours() << ":"
-		<< std::setw(2)
-		<< std::setfill(L'0')
-		<< system_time_.time_of_day().minutes() << ":"
-		<< std::setw(2)
-		<< std::setfill(L'0')
-		<< system_time_.time_of_day().seconds();
+	std::wstringstream datetime_ss;
+	datetime_ss << system_time_.date().day() << ". "
+		    << system_time_.date().month() << " "
+		    << system_time_.date().year()
+		    << ' '
+		    << std::setw(2)
+		    << std::setfill(L'0')
+		    << system_time_.time_of_day().hours() << ":"
+		    << std::setw(2)
+		    << std::setfill(L'0')
+		    << system_time_.time_of_day().minutes() << ":"
+		    << std::setw(2)
+		    << std::setfill(L'0')
+		    << system_time_.time_of_day().seconds();
 
 	std::wstringstream date_ss;
-	date_ss << system_time_.date().day() << ". "
-		<< system_time_.date().month() << " "
-		<< system_time_.date().year();
 
 	std::wstringstream version_ss;
 	version_ss << version_w;
 
-	status_win.add_text(date_ss.str(),
-			    ui::effect::bold)
-		  .add_text(time_ss.str(),
-			    ui::effect::bold)
-		  .add_text(version_ss.str(),
-			    ui::effect::normal,
+	status_win.add_text(version_ss.str(),
+			    ui::effect::normal)
+		  .add_text(datetime_ss.str(),
+			    ui::effect::bold,
 			    ui::align::right)
 		  .newline();
 
