@@ -48,18 +48,18 @@ and more.
 
 To add a Google Calendar backend the following option is used:
 ```
---google-api <id> <key> [ <cd> <ecd> ]
+--gcal-api <id> <key> [ <cd> <ecd> ]
 ```
 Set `<id>` to the id of the Google Calendar to use and `<key>`
 to the API key connected to that Calendar. Optionally `<cd>` and
 `<ecd>` can be provided to manually se the cooldown and error
 cooldown values.
 
-To add a POP Calendar backend the following option is used:
+To add an ical backend the following option is used:
 ```
---pop-api <url> [ <cd> <ecd> ]
+--ical-api <url> [ <cd> <ecd> ]
 ```
-Set `<url>` to the url provided by the TUT intra. Optionally `<cd>`
+Set `<url>` to the url provided by calendar service. Optionally `<cd>`
 and `<ecd>` can be provided to manually se the cooldown and error
 cooldown values.
  

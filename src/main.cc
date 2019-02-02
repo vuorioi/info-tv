@@ -76,7 +76,7 @@ int main(int argc, const char** argv)
 			return 0;
 		}
 
-		if (name == "google-api") {
+		if (name == "gcal-api") {
 			if (values.size() == 2) {
 				auto backend = std::make_shared<events::google_calendar_backend>();
 
@@ -107,16 +107,16 @@ int main(int argc, const char** argv)
 				print_help(argv[0]);
 				return -1;
 			}
-		} else if (name == "pop-api") {
+		} else if (name == "ical-api") {
 			if (values.size() == 1) {
-				auto backend = std::make_shared<events::pop_calendar_backend>();
+				auto backend = std::make_shared<events::ical_backend>();
 
 				backend->set_url(values[0]);
 
 				backends.push_back(std::move(backend));
 				calendar_model.add_source(backends.back());
 			} else if (values.size() == 3) {
-				auto backend = std::make_shared<events::pop_calendar_backend>();
+				auto backend = std::make_shared<events::ical_backend>();
 
 				backend->set_url(values[0]);
 
@@ -300,12 +300,12 @@ static void print_help(const char* name)
 		  << "  " << name << " [ --help | --version ]\n"
 		  << "  " << name << " [ options ]\n\n"
 		  << "Options:\n"
-		  << "  --pop-api <url> [ <cd> <ecd> ]\n"
-		  << "                         Add a POP backend with the <url> pointing to the ics\n"
+		  << "  --ical-api <url> [ <cd> <ecd> ]\n"
+		  << "                         Add an ical backend with the <url> pointing to the ics\n"
 		  << "                         resource. <cd> is the cooldown period in seconds and\n"
 		  << "                         <ecd> is the cooldown period used if the connection\n"
 		  << "                         to server failed.\n"
-		  << "  --google-api <id> <key> [ <cd> <ecd> ]\n"
+		  << "  --gcal-api <id> <key> [ <cd> <ecd> ]\n"
 		  << "                         Add a Google backend with the calendar id <id> and API\n"
 		  << "                         key <key>. <cd> is the cooldown period in seconds\n"
 		  << "                         and <ecd> is the cooldown period used if the connection\n"
