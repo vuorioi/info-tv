@@ -6,7 +6,7 @@ using boost::posix_time::seconds;
 using boost::posix_time::min_date_time;
 using boost::posix_time::second_clock;
 
-events::pop_calendar_backend::pop_calendar_backend() :
+events::ical_backend::ical_backend() :
 	cooldown_{1, 0, 0, 0},
 	error_cooldown_{0, 10, 0, 0},
 	last_update_{min_date_time},
@@ -14,31 +14,31 @@ events::pop_calendar_backend::pop_calendar_backend() :
 {}
 
 void
-events::pop_calendar_backend::lower_cooldown()
+events::ical_backend::lower_cooldown()
 {
 	was_error_ = true;
 }
 
 void
-events::pop_calendar_backend::set_cooldown(unsigned long secs)
+events::ical_backend::set_cooldown(unsigned long secs)
 {
 	cooldown_ = seconds(secs);
 }
 
 void
-events::pop_calendar_backend::set_error_cooldown(unsigned long secs)
+events::ical_backend::set_error_cooldown(unsigned long secs)
 {
 	error_cooldown_ = seconds(secs);
 }
 
 void
-events::pop_calendar_backend::set_url(const std::string& url)
+events::ical_backend::set_url(const std::string& url)
 {
 	url_ = url;
 }
 
 std::optional<std::list<events::event>>
-events::pop_calendar_backend::update()
+events::ical_backend::update()
 {
 	db_.set_request(url_);
 
@@ -73,19 +73,19 @@ events::pop_calendar_backend::update()
 }
 
 time_duration
-events::pop_calendar_backend::cooldown() const
+events::ical_backend::cooldown() const
 {
 	return cooldown_;
 }
 
 time_duration
-events::pop_calendar_backend::error_cooldown() const
+events::ical_backend::error_cooldown() const
 {
 	return error_cooldown_;
 }
 
 bool
-events::pop_calendar_backend::ready() const
+events::ical_backend::ready() const
 {
 	auto diff = second_clock::universal_time() - last_update_;
 	
@@ -96,7 +96,7 @@ events::pop_calendar_backend::ready() const
 }
 
 std::string_view
-events::pop_calendar_backend::url() const
+events::ical_backend::url() const
 {
 	return std::string_view{url_};
 }

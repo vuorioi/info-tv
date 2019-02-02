@@ -15,23 +15,23 @@ using boost::posix_time::ptime;
 using boost::posix_time::time_duration;
 
 namespace events {
-/* pop_calendar_backend class
+/* ical_backend class
  * This class provides an event backend to the POP calendar used by Tampere
  * University of Technology.
  */
-class pop_calendar_backend : public event_backend_interface {
+class ical_backend : public event_backend_interface {
 public:
 	/* ctor
 	 *
 	 * This ctor creates a POP event calendar backend object with cooldown
 	 * period of 1 hour and an error cooldown of 10 minutes.
 	 */
-	pop_calendar_backend();
+	ical_backend();
 	/* explicitly deleted copy ctor */
-	pop_calendar_backend(const pop_calendar_backend& rhs) = delete;
+	ical_backend(const ical_backend& rhs) = delete;
 	
 	/* explicitly defaulted copy ctor */
-	~pop_calendar_backend() = default;
+	~ical_backend() = default;
 
 	/* lower_cooldown - implemented from the event_backend_interface */
 	void lower_cooldown() override;
