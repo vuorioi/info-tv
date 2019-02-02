@@ -13,34 +13,6 @@ are used for unit testing and date time utilites.
 The interfaces provided by the components are documented in the
 source files.
 
-## Project structure
-The directory structure of this repo is the following
- - `media/` -- Media files
- - `src/` -- Source code
-   - `db_connection` -- Handles the connections to the remote services
-   - `event` -- Represents a single event
-   - `event_model` -- A model that manages the events in the system
-   - `view_interface` -- A commong interface for the view that are
-     shown to the user
-   - `event_view` -- A view for rendering events from the event model
-   - `status_view` -- A view for system information
-   - `event_backend_interface` -- A common interface for the event
-     sources
-   - `google_calendar_backend` -- Implementation of the event backend
-     interface for a Google calendar
-   - `pop_calendar_backend` -- Implementation of the event backend
-     interface for a POP calendar
-   - `icalendar` -- Very simple parser for the iCalendar format
-   - `parser` -- Event parsing functions
-   - `ui` -- Simple userinterface based on the ncursesw library
-   - `utility` -- Collection of utility functions
- - `test/` -- Unit test sources
- - `util/` -- Utility scripts
- - `CMakeLists.txt`
- - `COPYING.md` -- License information
- - `README.md` -- This file
- - `TODO.md` -- List of things to be done until the next release
-
 ## Dependencies
 This project uses c++17 features and as such a relatively recent
 compiler should be used. This project alse depends on the
