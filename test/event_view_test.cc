@@ -1,5 +1,5 @@
 #define BOOST_TEST_MODULE event test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include "../event_view.h"
 

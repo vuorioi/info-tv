@@ -1,5 +1,5 @@
 #define BOOST_TEST_MODULE google calendar backend test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include <chrono>
 #include <thread>

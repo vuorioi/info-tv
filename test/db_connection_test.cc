@@ -1,5 +1,5 @@
 #define BOOST_TEST_MODULE db connection test
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 
 #include "db_connection.h"
 
