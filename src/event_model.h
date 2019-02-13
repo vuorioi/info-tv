@@ -36,12 +36,21 @@ public:
 	 */
 	void add_hilight(std::basic_regex<wchar_t> rule,
 			 events::search_target target);
-	/* add_source - add an event source to this model
+	/* add_event_source - add an event source to this model
 	 * @source: shared pointer to the event backend
 	 *
 	 * Adds an source that this model will use for finding events.
 	 */
-	void add_source(std::shared_ptr<event_backend_interface> source);
+	void add_event_source(std::shared_ptr<event_backend_interface> source);
+
+	/* add_motd_source - add an message of the day source to this model
+	 * @source: shared pointer to the event backend
+	 *
+	 * Adds an source that this model will use for finding the message of the
+	 * day.
+	 */
+	void add_motd_source(std::shared_ptr<event_backend_interface> source);
+
 	/* update - try to update the model
 	 *
 	 * Returns true if there are new events.
@@ -61,6 +70,8 @@ protected:
 	std::list<event> events_;
 	mutable std::list<std::pair<std::shared_ptr<event_backend_interface>,
 			  std::list<event>>> event_sources_;
+	mutable std::list<std::pair<std::shared_ptr<event_backend_interface>,
+			  std::list<std::wstring>>> motd_sources_;
 	std::vector<std::pair<events::search_target,
 			      std::basic_regex<wchar_t>>> regex_rules_;
 	std::unordered_set<unsigned> source_rules_;

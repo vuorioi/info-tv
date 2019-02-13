@@ -32,9 +32,15 @@ events::event_model::add_hilight(std::basic_regex<wchar_t> rule,
 }
 
 void
-events::event_model::add_source(std::shared_ptr<event_backend_interface> source)
+events::event_model::add_event_source(std::shared_ptr<event_backend_interface> source)
 {
 	event_sources_.push_back(std::pair(source, std::list<event>{}));
+}
+
+void
+events::event_model::add_motd_source(std::shared_ptr<event_backend_interface> source)
+{
+	motd_sources_.push_back(std::pair(source, std::list<std::wstring>{}));
 }
 
 bool
