@@ -77,65 +77,91 @@ int main(int argc, const char** argv)
 		}
 
 		if (name == "gcal-api") {
+			auto option_count = values.size();
+			bool is_motd_source = false;
+			unsigned start_idx = 0;
+
+			if (values[0] == "motd") {
+				is_motd_source = true;
+				option_count--;
+				start_idx = 1;
+			}
+
 			if (values.size() == 2) {
 				auto backend = std::make_shared<events::google_calendar_backend>();
 
-				backend->set_id(values[0]);
-				backend->set_key(values[1]);
+				backend->set_id(values[start_idx]);
+				backend->set_key(values[start_idx + 1]);
 
 				backends.emplace_back(std::move(backend));
-				calendar_model.add_source(backends.back());
 			} else if (values.size() == 4) {
 				auto backend = std::make_shared<events::google_calendar_backend>();
 
-				backend->set_id(values[0]);
-				backend->set_key(values[1]);
+				backend->set_id(values[start_idx]);
+				backend->set_key(values[start_idx + 1]);
 
 				try {
-					backend->set_cooldown(std::stoi(values[2]));
-					backend->set_error_cooldown(std::stoi(values[3]));
+					backend->set_cooldown(std::stoi(values[start_idx + 2]));
+					backend->set_error_cooldown(std::stoi(values[start_idx + 3]));
 				} catch (const std::exception& e) {
-					std::cout << "Invalid cooldown argument for --google-api\n\n";
+					std::cout << "Invalid cooldown argument for --gcal-api\n\n";
 					print_help(argv[0]);
 					return -1;
 				}
 
 				backends.emplace_back(std::move(backend));
-				calendar_model.add_source(backends.back());
 			} else {
-				std::cout << "Wrong amount of arguments for --google-api\n\n";
+				std::cout << "Wrong amount of arguments for --gcal-api\n\n";
 				print_help(argv[0]);
 				return -1;
 			}
+
+			if (is_motd_source) 
+				calendar_model.add_motd_source(backends.back());
+			else
+				calendar_model.add_event_source(backends.back());
 		} else if (name == "ical-api") {
+			auto option_count = values.size();
+			bool is_motd_source = false;
+			unsigned start_idx = 0;
+
+			if (values[0] == "motd") {
+				is_motd_source = true;
+				option_count--;
+				start_idx = 1;
+			}
+
 			if (values.size() == 1) {
 				auto backend = std::make_shared<events::ical_backend>();
 
-				backend->set_url(values[0]);
+				backend->set_url(values[start_idx]);
 
 				backends.push_back(std::move(backend));
-				calendar_model.add_source(backends.back());
 			} else if (values.size() == 3) {
 				auto backend = std::make_shared<events::ical_backend>();
 
-				backend->set_url(values[0]);
+				backend->set_url(values[start_idx]);
 
 				try {
-					backend->set_cooldown(std::stoi(values[1]));
-					backend->set_error_cooldown(std::stoi(values[2]));
+					backend->set_cooldown(std::stoi(values[start_idx + 1]));
+					backend->set_error_cooldown(std::stoi(values[start_idx + 2]));
 				} catch (const std::exception& e) {
-					std::cout << "Invalid cooldown argument for --pop-api\n\n";
+					std::cout << "Invalid cooldown argument for --ical-api\n\n";
 					print_help(argv[0]);
 					return -1;
 				}
 
 				backends.push_back(std::move(backend));
-				calendar_model.add_source(backends.back());
 			} else {
-				std::cout << "Wrong amount of arguments for --pop-api\n\n";
+				std::cout << "Wrong amount of arguments for --ical-api\n\n";
 				print_help(argv[0]);
 				return -1;
 			}
+
+			if (is_motd_source) 
+				calendar_model.add_motd_source(backends.back());
+			else
+				calendar_model.add_event_source(backends.back());
 		} else if (name == "logo") {
 			if (values.size() == 0) {
 				status.set_logo("/usr/local/share/info-tv/logo.ascii");
@@ -248,12 +274,19 @@ int main(int argc, const char** argv)
 
 		ui::clear();
 
+		// Update the system message
 		bool new_events = calendar_model.update();
 		if (new_events)
 			set_system_message(status, L"Events updated!", 60s);
 
 		status.set_system_time(second_clock::local_time());
 		refresh_system_message(status);
+
+		// Check if we have message of the day event
+		// if (calendar_model.has_motd())
+		//   motd.set_message(calendar_model.motd());
+		// else
+		//   motd.clear_message();
 
 		// Draw everything
 		ui::win main_win{{2, 1},
