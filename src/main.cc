@@ -10,17 +10,22 @@
 #include <utility>
 #include <vector>
 
+#include <boost/asio.hpp>
+
 #include "event.h"
 #include "event_backend_interface.h"
 #include "event_model.h"
 #include "event_view.h"
 #include "google_calendar_backend.h"
 #include "ical_backend.h"
+#include "motd_model.h"
+#include "motd_view.h"
 #include "parser.h"
 #include "status_view.h"
 #include "ui.h"
 #include "utility.h"
 #include "view_interface.h"
+
 
 extern char version[];
 
@@ -44,11 +49,21 @@ int main(int argc, const char** argv)
 {
 	using namespace std::chrono_literals;
 
+    boost::asio::io_context ctx;
+
 	// Create views and add them to the controllers list
 	std::list<view_interface*> views;
 	
 	util::status_view status;
 	views.push_back(&status);
+
+	motd::motd_view motd_view;
+	views.push_back(&motd_view);
+
+    ///TEST
+    motd::motd_model motd_model(ctx, 18, "skilta-pw");
+	motd_view.set_model(&motd_model);
+    ///TEST
 
 	events::event_view calendar_view;
 	views.push_back(&calendar_view);
@@ -78,31 +93,23 @@ int main(int argc, const char** argv)
 
 		if (name == "gcal-api") {
 			auto option_count = values.size();
-			bool is_motd_source = false;
-			unsigned start_idx = 0;
 
-			if (values[0] == "motd") {
-				is_motd_source = true;
-				option_count--;
-				start_idx = 1;
-			}
-
-			if (values.size() == 2) {
+			if (option_count == 2) {
 				auto backend = std::make_shared<events::google_calendar_backend>();
 
-				backend->set_id(values[start_idx]);
-				backend->set_key(values[start_idx + 1]);
+				backend->set_id(values[0]);
+				backend->set_key(values[1]);
 
 				backends.emplace_back(std::move(backend));
-			} else if (values.size() == 4) {
+			} else if (option_count == 4) {
 				auto backend = std::make_shared<events::google_calendar_backend>();
 
-				backend->set_id(values[start_idx]);
-				backend->set_key(values[start_idx + 1]);
+				backend->set_id(values[0]);
+				backend->set_key(values[1]);
 
 				try {
-					backend->set_cooldown(std::stoi(values[start_idx + 2]));
-					backend->set_error_cooldown(std::stoi(values[start_idx + 3]));
+					backend->set_cooldown(std::stoi(values[2]));
+					backend->set_error_cooldown(std::stoi(values[3]));
 				} catch (const std::exception& e) {
 					std::cout << "Invalid cooldown argument for --gcal-api\n\n";
 					print_help(argv[0]);
@@ -116,35 +123,24 @@ int main(int argc, const char** argv)
 				return -1;
 			}
 
-			if (is_motd_source) 
-				calendar_model.add_motd_source(backends.back());
-			else
-				calendar_model.add_event_source(backends.back());
+			calendar_model.add_event_source(backends.back());
 		} else if (name == "ical-api") {
 			auto option_count = values.size();
-			bool is_motd_source = false;
-			unsigned start_idx = 0;
 
-			if (values[0] == "motd") {
-				is_motd_source = true;
-				option_count--;
-				start_idx = 1;
-			}
-
-			if (values.size() == 1) {
+			if (option_count == 1) {
 				auto backend = std::make_shared<events::ical_backend>();
 
-				backend->set_url(values[start_idx]);
+				backend->set_url(values[0]);
 
 				backends.push_back(std::move(backend));
-			} else if (values.size() == 3) {
+			} else if (option_count == 3) {
 				auto backend = std::make_shared<events::ical_backend>();
 
-				backend->set_url(values[start_idx]);
+				backend->set_url(values[0]);
 
 				try {
-					backend->set_cooldown(std::stoi(values[start_idx + 1]));
-					backend->set_error_cooldown(std::stoi(values[start_idx + 2]));
+					backend->set_cooldown(std::stoi(values[1]));
+					backend->set_error_cooldown(std::stoi(values[2]));
 				} catch (const std::exception& e) {
 					std::cout << "Invalid cooldown argument for --ical-api\n\n";
 					print_help(argv[0]);
@@ -158,10 +154,7 @@ int main(int argc, const char** argv)
 				return -1;
 			}
 
-			if (is_motd_source) 
-				calendar_model.add_motd_source(backends.back());
-			else
-				calendar_model.add_event_source(backends.back());
+			calendar_model.add_event_source(backends.back());
 		} else if (name == "logo") {
 			if (values.size() == 0) {
 				status.set_logo("/usr/local/share/info-tv/logo.ascii");
@@ -269,6 +262,10 @@ int main(int argc, const char** argv)
 	unsigned screen_width, screen_height;
 	std::tie(screen_width, screen_height) = ui::screen_size();
 
+    auto worker = std::thread([&ctx] {
+            ctx.run();
+        });
+
 	do {
 		auto start = std::chrono::steady_clock::now();
 
@@ -281,12 +278,6 @@ int main(int argc, const char** argv)
 
 		status.set_system_time(second_clock::local_time());
 		refresh_system_message(status);
-
-		// Check if we have message of the day event
-		// if (calendar_model.has_motd())
-		//   motd.set_message(calendar_model.motd());
-		// else
-		//   motd.clear_message();
 
 		// Draw everything
 		ui::win main_win{{2, 1},
@@ -302,11 +293,13 @@ int main(int argc, const char** argv)
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(100) - loop_duration);
 	} while (not quit);
-	
+
 	// Clean up curses
 	ui::screen_deinit();
 
-	return 0;
+    ctx.stop();
+
+    worker.join();
 }
 
 static void refresh_system_message(util::status_view& view)
