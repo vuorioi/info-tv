@@ -3,6 +3,7 @@ set(COMPILE_DEFINITIONS -Werror)
 find_package(nlohmann_json 3.2.0 REQUIRED)
 
 find_package(Boost REQUIRED COMPONENTS date_time)
+find_package(Threads)
 
 include_directories(${Boost_INCLUDE_DIRS})
 
@@ -16,6 +17,12 @@ target_link_libraries(Ui
 
 add_library(iCalendar
 	icalendar.cc)
+
+add_library(Motd
+    tcp_connection.cc
+    tcp_server.cc
+    motd_model.cc
+    motd_view.cc)
 
 add_library(Event
 	db_connection.cc
@@ -42,7 +49,9 @@ add_executable(info-tv
 	main.cc
 	version.cc)
 target_link_libraries(info-tv
+    ${CMAKE_THREAD_LIBS_INIT}
 	Event
+    Motd
 	Status
 	Ui
 	Utility)
