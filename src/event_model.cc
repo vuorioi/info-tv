@@ -6,10 +6,13 @@
 #include <sstream>
 
 #include <boost/date_time.hpp>
+#include "boost/date_time/gregorian/gregorian.hpp"
 
 #include "utility.h"
 
 using boost::posix_time::second_clock;
+using boost::posix_time::hours;
+using boost::gregorian::day_clock;
 
 static bool add_events(std::list<events::event>& dst,
 		       const std::list<events::event>& src,
@@ -37,17 +40,12 @@ events::event_model::add_event_source(std::shared_ptr<event_backend_interface> s
 	event_sources_.push_back(std::pair(source, std::list<event>{}));
 }
 
-void
-events::event_model::add_motd_source(std::shared_ptr<event_backend_interface> source)
-{
-	motd_sources_.push_back(std::pair(source, std::list<std::wstring>{}));
-}
-
 bool
 events::event_model::update()
 {
 	bool new_events = false;
 
+	// Update events if their sources are ready
 	for (auto& [source, source_events] : event_sources_) {
 		if (source->ready()) {
 			auto result = source->update();
@@ -56,14 +54,16 @@ events::event_model::update()
 				new_events = true;
 				source_events = result.value();
 			} else {
+				// If the source update failed lower
+				// the source cooldown value to trigger
+				// a retry sooner
 				source->lower_cooldown();
-				continue;
 			}
 		}
 	}
 
 	// If any of the sources provided updates we need to rebuild our local
-	// events list. Otherwise we can just remove passed events
+	// events and motd lists. Otherwise we can just remove passed events
 	if (new_events) {
 		unsigned i = 0;
 		for (auto& [source, source_events] : event_sources_) {
@@ -82,6 +82,7 @@ events::event_model::update()
 		});
 	}
 
+	// Return true if there are new events
 	return new_events;
 }
 
