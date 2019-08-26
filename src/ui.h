@@ -6,6 +6,7 @@
 #include <utility>
 #include <vector>
 
+#define NCURSES_NOMACROS
 #include <curses.h>
 
 namespace ui {
