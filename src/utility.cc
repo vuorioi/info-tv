@@ -1,7 +1,52 @@
 #include "utility.h"
 
+#include <algorithm>
 #include <cstring>
+#include <iterator>
+#include <numeric>
 #include <stdexcept>
+
+#include <boost/tokenizer.hpp>
+
+static bool
+tokens_are_similar(std::wstring_view lhs, std::wstring_view rhs)
+{
+	const auto str_length_cmp =
+		[](std::wstring_view rhs, std::wstring_view lhs) {
+		return rhs.length() < lhs.length();
+	};
+
+	auto [s, l] = std::minmax(rhs, lhs, str_length_cmp);
+
+	// Check the longer token against the shorter token at
+	// different positions and calculate the similairy for each
+	// position (stop if similarity at one of the positions passes
+	// the threshold)
+	const unsigned similarity_threshold = (l.length() * 66)/100;
+
+	for (auto l_iter = l.cbegin();
+	     std::distance(l_iter, l.cend()) >= s.length();
+	     ++l_iter) {
+		auto s_iter = s.cbegin();
+		const auto calc_similarity = [&iter = s_iter](unsigned count, wchar_t c) {
+			if (tolower(*iter++) == tolower(c)) {
+				count++;
+			}
+
+			return count;
+		};
+
+		const unsigned similarity = std::accumulate(l_iter,
+                                                    l.cend(),
+                                                    0,
+                                                    calc_similarity);
+
+		if (similarity >= similarity_threshold)
+			return true;
+	}
+
+	return false;
+}
 
 std::vector<std::pair<std::string, std::vector<std::string>>>
 util::parse_commandline(const int count, const char** vector)
@@ -21,23 +66,57 @@ util::parse_commandline(const int count, const char** vector)
 }
 
 bool
-util::similar_str(const std::wstring_view& lhs,
-		  const std::wstring_view& rhs)
+util::similar_str(std::wstring_view lhs,
+		  std::wstring_view rhs)
 {
-	const auto lhs_len = lhs.length();
-	const auto rhs_len = rhs.length();
+	const auto str_length_cmp =
+		[](std::wstring_view rhs, std::wstring_view lhs) {
+		return rhs.length() < lhs.length();
+	};
 
-	if (lhs_len < rhs_len) {
-		if (rhs.find(lhs) != std::string_view::npos)
-			return (lhs_len*100)/rhs_len >= 33;
-		else
-			return false;
-	} else if (lhs_len > rhs_len) {
-		if (lhs.find(rhs) != std::string_view::npos)
-			return (rhs_len*100)/lhs_len >= 33;
-		else
-			return false;
-	} else {
-		return lhs == rhs;
+	auto [s, l] = std::minmax(rhs, lhs, str_length_cmp);
+
+	using separator_t = boost::char_separator<wchar_t>;
+	using iterator_t = std::wstring::const_iterator;
+	using string_t = std::wstring;
+
+	constexpr wchar_t sep_str[] = L".,:; -/\\";
+
+	boost::tokenizer<separator_t, iterator_t, string_t>
+		s_tokens(s, separator_t{sep_str});
+
+	boost::tokenizer<separator_t, iterator_t, string_t>
+		l_tokens(l, separator_t{sep_str});
+
+	// Compare the tokenized strings and calculate the number of similar
+	// tokens. Stop if the number of similar tokens is greater than the
+	// threshold
+	const auto l_token_count = std::distance(l_tokens.begin(),
+                                             l_tokens.end());
+	const unsigned similar_threshold =
+        std::clamp(static_cast<unsigned>((l_token_count*33)/100),
+                   1U,
+                   std::numeric_limits<unsigned>::max());
+
+	unsigned similar_tokens = 0;
+	auto l_token_start = l_tokens.begin();
+
+	for (auto s_token = s_tokens.begin();
+	     s_token != s_tokens.end();
+	     ++s_token) {
+		for (auto l_token = l_token_start;
+		     l_token != l_tokens.end();
+		     ++l_token) {
+			if (tokens_are_similar(*s_token, *l_token)) {
+				similar_tokens++;
+				l_token_start = std::next(l_token);
+				break;
+			}
+		}
+
+		if (similar_tokens >= similar_threshold)
+			return true;
 	}
+
+	return false;
 }

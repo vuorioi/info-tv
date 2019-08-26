@@ -31,6 +31,6 @@ namespace util {
 	 * if the substring length is atleast 33% of the length of the longer
 	 * string.
 	 */
-	bool similar_str(const std::wstring_view& lhs,
-			 const std::wstring_view& rhs);
+	bool similar_str(std::wstring_view lhs,
+			 std::wstring_view rhs);
 }
