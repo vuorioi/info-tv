@@ -25,7 +25,7 @@ add_library(Motd
     motd_view.cc)
 
 add_library(Event
-	db_connection.cc
+    http_get.cc
 	event.cc
 	event_model.cc
 	event_view.cc
@@ -33,8 +33,8 @@ add_library(Event
 	ical_backend.cc
 	parser.cc)
 target_link_libraries(Event
-	curl
 	nlohmann_json::nlohmann_json
+    curl
 	Ui
 	iCalendar
 	${Boost_DATE_TIME_LIBRARY})
