@@ -10,10 +10,10 @@ target_link_libraries(event_test
 	Event
 	${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
-add_executable(db_connection_test db_connection_test.cc)
-target_link_libraries(db_connection_test
-	Event
-	${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+#add_executable(db_connection_test db_connection_test.cc)
+#target_link_libraries(db_connection_test
+#Event
+#${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
 add_executable(parser_test parser_test.cc)
 target_link_libraries(parser_test
@@ -25,12 +25,12 @@ target_link_libraries(status_view_test
 	Status
 	${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
-add_executable(google_calendar_backend_test google_calendar_backend_test.cc)
-target_link_libraries(google_calendar_backend_test
-	Event
-	${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+#add_executable(google_calendar_backend_test google_calendar_backend_test.cc)
+#target_link_libraries(google_calendar_backend_test
+#Event
+#${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
-add_executable(ical_backend_test ical_backend_test.cc)
-target_link_libraries(ical_backend_test
-	Event
-	${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+#add_executable(ical_backend_test ical_backend_test.cc)
+#target_link_libraries(ical_backend_test
+#Event
+#${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
