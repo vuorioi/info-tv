@@ -14,7 +14,7 @@ class tcp_connection : public std::enable_shared_from_this<tcp_connection> {
     boost::asio::streambuf streambuf_;
 
 public:
-    tcp_connection(boost::asio::io_service& ctx,
+    tcp_connection(boost::asio::ip::tcp::socket socket,
                    std::function<bool(std::string)> handler);
     tcp_connection(const tcp_connection& other) = delete;
     tcp_connection(tcp_connection&& other) = delete;

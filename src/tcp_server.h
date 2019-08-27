@@ -15,7 +15,7 @@ class tcp_server : public std::enable_shared_from_this<tcp_server> {
     std::function<bool(std::string)> handler_;
 
 public:
-    tcp_server(boost::asio::io_service& ctx,
+    tcp_server(boost::asio::io_context& ctx,
                unsigned port,
                std::function<bool(std::string)> handler);
     tcp_server(const tcp_server& other) = delete;
@@ -28,7 +28,7 @@ public:
 private:
     void do_accept();
     void on_accept(const boost::system::error_code& error,
-                   std::shared_ptr<tcp_connection> connection);
+                   boost::asio::ip::tcp::socket socket);
 };
 
 } // namespace motd

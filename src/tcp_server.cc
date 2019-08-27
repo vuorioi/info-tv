@@ -4,7 +4,7 @@
 
 
 namespace motd {
-tcp_server::tcp_server(boost::asio::io_service& ctx,
+tcp_server::tcp_server(boost::asio::io_context& ctx,
                        unsigned port,
                        std::function<bool(std::string)> handler) :
     acceptor_(ctx,
@@ -21,26 +21,21 @@ tcp_server::run()
 void
 tcp_server::do_accept()
 {
-    auto connection =
-        std::make_shared<tcp_connection>(acceptor_.get_io_service(),
-                                         handler_);
-
-    acceptor_.async_accept(connection->socket(),
-                           std::bind(&tcp_server::on_accept,
+    acceptor_.async_accept(std::bind(&tcp_server::on_accept,
                                      shared_from_this(),
                                      std::placeholders::_1,
-                                     connection));
+                                     std::placeholders::_2));
 }
 
 void
 tcp_server::on_accept(const boost::system::error_code& error,
-                      std::shared_ptr<tcp_connection> connection)
+                      boost::asio::ip::tcp::socket socket)
 {
     if (error)
-        //return tcp_fail("do_accept", error); //FIXME throw
         throw std::runtime_error("do accept error");
 
-    connection->run();
+    std::make_shared<tcp_connection>(std::move(socket),
+                                     handler_)->run();
 
     do_accept();
 }

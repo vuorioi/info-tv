@@ -8,10 +8,10 @@ namespace motd {
 //FIXME remove
 static void tcp_fail(std::string what, boost::system::error_code code);
 
-tcp_connection::tcp_connection(boost::asio::io_service& ctx,
+tcp_connection::tcp_connection(boost::asio::ip::tcp::socket socket,
                                std::function<bool(std::string)> handler) :
     handler_(std::move(handler)),
-    socket_(ctx)
+    socket_(std::move(socket))
 {}
 
 void
