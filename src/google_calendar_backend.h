@@ -5,11 +5,12 @@
 #include <string>
 #include <string_view>
 
+#include <boost/asio.hpp>
 #include <boost/date_time.hpp>
 
-#include "db_connection.h"
 #include "event.h"
 #include "event_backend_interface.h"
+#include "http_get.h"
 
 using boost::posix_time::ptime;
 using boost::posix_time::time_duration;
@@ -19,13 +20,23 @@ namespace events {
  * This class provides an event backend to the Google Calendars.
  */
 class google_calendar_backend : public event_backend_interface {
+protected:
+	time_duration cooldown_;
+	time_duration error_cooldown_;
+    http_get http_client_;
+	std::string id_;
+	std::string key_;
+	ptime last_update_;
+	bool was_error_;
+
 public:
 	/* ctor
+     * @ctx: io_context for the http client code
 	 *
 	 * This ctor creates a Google Calendar backend object with cooldown
 	 * period of 1 hour and an error cooldown of 10 minutes.
 	 */
-	google_calendar_backend();
+	google_calendar_backend(boost::asio::io_context& ctx);
 	/* explicitly deleted copy ctor */
 	google_calendar_backend(const google_calendar_backend& rhs) = delete;
 	
@@ -81,14 +92,5 @@ public:
 	std::string_view key() const;
 	/* ready - implemented from the event_backend_interface */
 	bool ready() const override;
-
-protected:
-	time_duration cooldown_;
-	db_connection db_;
-	time_duration error_cooldown_;
-	std::string id_;
-	std::string key_;
-	ptime last_update_;
-	bool was_error_;
 };
 }

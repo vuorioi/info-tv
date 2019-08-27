@@ -2,51 +2,52 @@
 
 #include "parser.h"
 
+namespace events {
 using boost::posix_time::seconds;
 using boost::posix_time::min_date_time;
 using boost::posix_time::second_clock;
 
-events::ical_backend::ical_backend() :
+ical_backend::ical_backend(boost::asio::io_context& ctx) :
 	cooldown_{1, 0, 0, 0},
 	error_cooldown_{0, 10, 0, 0},
-	last_update_{min_date_time},
-	was_error_{false}
+    http_client_(ctx),
+	last_update_(min_date_time),
+	was_error_(false)
 {}
 
 void
-events::ical_backend::lower_cooldown()
+ical_backend::lower_cooldown()
 {
 	was_error_ = true;
 }
 
 void
-events::ical_backend::set_cooldown(unsigned long secs)
+ical_backend::set_cooldown(unsigned long secs)
 {
 	cooldown_ = seconds(secs);
 }
 
 void
-events::ical_backend::set_error_cooldown(unsigned long secs)
+ical_backend::set_error_cooldown(unsigned long secs)
 {
 	error_cooldown_ = seconds(secs);
 }
 
 void
-events::ical_backend::set_url(const std::string& url)
+ical_backend::set_url(std::string host, std::string target)
 {
-	url_ = url;
+    host_ = std::move(host);
+    target_ = std::move(target);
 }
 
 std::optional<std::list<events::event>>
-events::ical_backend::update()
+ical_backend::update()
 {
-	db_.set_request(url_);
-
 	std::string response;
 	bool updated;
 
 	try {
-		response = db_.get_response();
+		response = http_client_.execute(host_, "80", target_);
 		updated = true;
 	} catch (...) {
 		updated = false;
@@ -73,19 +74,19 @@ events::ical_backend::update()
 }
 
 time_duration
-events::ical_backend::cooldown() const
+ical_backend::cooldown() const
 {
 	return cooldown_;
 }
 
 time_duration
-events::ical_backend::error_cooldown() const
+ical_backend::error_cooldown() const
 {
 	return error_cooldown_;
 }
 
 bool
-events::ical_backend::ready() const
+ical_backend::ready() const
 {
 	auto diff = second_clock::universal_time() - last_update_;
 	
@@ -95,10 +96,9 @@ events::ical_backend::ready() const
 		return diff >= cooldown_;
 }
 
-std::string_view
-events::ical_backend::url() const
+std::pair<std::string_view, std::string_view>
+ical_backend::url() const
 {
-	return std::string_view{url_};
+	return {host_, target_};
 }
-
-
+} // namespace events
