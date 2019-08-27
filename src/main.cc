@@ -95,14 +95,14 @@ int main(int argc, const char** argv)
 			auto option_count = values.size();
 
 			if (option_count == 2) {
-				auto backend = std::make_shared<events::google_calendar_backend>();
+				auto backend = std::make_shared<events::google_calendar_backend>(ctx);
 
 				backend->set_id(values[0]);
 				backend->set_key(values[1]);
 
 				backends.emplace_back(std::move(backend));
 			} else if (option_count == 4) {
-				auto backend = std::make_shared<events::google_calendar_backend>();
+				auto backend = std::make_shared<events::google_calendar_backend>(ctx);
 
 				backend->set_id(values[0]);
 				backend->set_key(values[1]);
@@ -127,20 +127,20 @@ int main(int argc, const char** argv)
 		} else if (name == "ical-api") {
 			auto option_count = values.size();
 
-			if (option_count == 1) {
-				auto backend = std::make_shared<events::ical_backend>();
+			if (option_count == 2) {
+				auto backend = std::make_shared<events::ical_backend>(ctx);
 
-				backend->set_url(values[0]);
+				backend->set_url(values[0], values[1]);
 
 				backends.push_back(std::move(backend));
-			} else if (option_count == 3) {
-				auto backend = std::make_shared<events::ical_backend>();
+			} else if (option_count == 4) {
+				auto backend = std::make_shared<events::ical_backend>(ctx);
 
-				backend->set_url(values[0]);
+				backend->set_url(values[0], values[1]);
 
 				try {
-					backend->set_cooldown(std::stoi(values[1]));
-					backend->set_error_cooldown(std::stoi(values[2]));
+					backend->set_cooldown(std::stoi(values[2]));
+					backend->set_error_cooldown(std::stoi(values[3]));
 				} catch (const std::exception& e) {
 					std::cout << "Invalid cooldown argument for --ical-api\n\n";
 					print_help(argv[0]);
@@ -326,8 +326,8 @@ static void print_help(const char* name)
 		  << "  " << name << " [ --help | --version ]\n"
 		  << "  " << name << " [ options ]\n\n"
 		  << "Options:\n"
-		  << "  --ical-api <url> [ <cd> <ecd> ]\n"
-		  << "                         Add an ical backend with the <url> pointing to the ics\n"
+		  << "  --ical-api <host> <target> [ <cd> <ecd> ]\n"
+		  << "                         Add an ical backend with the <host> machine's <target> pointing to the ics\n"
 		  << "                         resource. <cd> is the cooldown period in seconds and\n"
 		  << "                         <ecd> is the cooldown period used if the connection\n"
 		  << "                         to server failed.\n"
